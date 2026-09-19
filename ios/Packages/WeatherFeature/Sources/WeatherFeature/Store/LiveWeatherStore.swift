@@ -6,6 +6,7 @@ actor LiveWeatherStore: WeatherStore {
     private let cache: any ForecastCache
     private let savedLocationsStore: any SavedLocationsPersistence
     private var locations: [SavedLocation]?
+    private var pendingWrite: Task<Void, Never>?
 
     init(provider: any WeatherProvider, cache: any ForecastCache, savedLocations: any SavedLocationsPersistence) {
         self.provider = provider
@@ -60,6 +61,7 @@ actor LiveWeatherStore: WeatherStore {
     private func loadedLocations() async -> [SavedLocation] {
         if let locations { return locations }
         let loaded = await savedLocationsStore.load()
+        // A mutation may have completed while the first load was suspended.
         if let locations { return locations }
         locations = loaded
         return loaded
@@ -67,6 +69,12 @@ actor LiveWeatherStore: WeatherStore {
 
     private func persist(_ updated: [SavedLocation]) async {
         locations = updated
-        await savedLocationsStore.save(updated)
+        let previous = pendingWrite
+        let write = Task { [savedLocationsStore] in
+            await previous?.value
+            await savedLocationsStore.save(updated)
+        }
+        pendingWrite = write
+        await write.value
     }
 }

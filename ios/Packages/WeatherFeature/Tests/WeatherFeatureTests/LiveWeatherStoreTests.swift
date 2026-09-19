@@ -236,6 +236,26 @@ private func location(_ index: Int) -> SavedLocation {
         #expect(await harness.makeStore().savedLocations() == expected)
     }
 
+    @Test func aSlowEarlierWriteCannotOverwriteALaterListOnDisk() async throws {
+        let persistence = DelayedFirstWritePersistence()
+        let store = LiveWeatherStore(
+            provider: FakeWeatherProvider(),
+            cache: FileForecastCache(directory: try TemporaryDirectory().url),
+            savedLocations: persistence
+        )
+        let first = location(1)
+        let second = location(2)
+
+        async let saveFirst: Void = store.save(first)
+        await persistence.waitUntilFirstSaveBegan()
+        async let saveSecond: Void = store.save(second)
+        _ = await (saveFirst, saveSecond)
+
+        let recorded = await persistence.recordedLists
+        #expect(recorded.map { $0.map(\.id) } == [[first.id], [first.id, second.id]])
+        #expect(await persistence.lastRecordedList == [first, second])
+    }
+
     @Test func twentyConcurrentSavesAllSurviveInMemoryAndOnDisk() async throws {
         let harness = try StoreHarness()
         let store = harness.makeStore()
