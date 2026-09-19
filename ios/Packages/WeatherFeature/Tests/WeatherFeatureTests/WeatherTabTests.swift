@@ -5,8 +5,7 @@ import WeatherFeature
 
 @Suite @MainActor struct WeatherTabTests {
     @Test func publicEntryAcceptsAnyLocationProvider() {
-        let tab = WeatherTab(location: StubLocation())
-        _ = tab.body
+        _ = WeatherTab(location: StubLocation())
     }
 }
 

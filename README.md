@@ -32,7 +32,8 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS, step 1 of 6. The app builds, tests and lints with `make lint ios-test ios-build`. It shows a placeholder screen. The forecast arrives in step 2.
+Phase 1, iOS, step 2 of 6. The Weather tab renders a full forecast screen from a fixture in every state, with Dynamic Type, VoiceOver and snapshot tests. Live data arrives in step 3.
+<img src="docs/images/weather-step2.png" alt="Weather tab, step 2" width="300">
 
 ## Build log
 
@@ -40,6 +41,7 @@ Phase 1, iOS, step 1 of 6. The app builds, tests and lints with `make lint ios-t
 |---|---|
 | 2026-09-11 | Repo created. Scope and phase order fixed. |
 | 2026-09-19 | iOS step 1: two local Swift packages, XcodeGen app target, Makefile, layer lint, GitHub Actions test job. |
+| 2026-09-19 | iOS step 2: weather model, day summary rules, theme, formatter, WeatherView in all states, snapshot tests. |
 
 ## Layout
 
