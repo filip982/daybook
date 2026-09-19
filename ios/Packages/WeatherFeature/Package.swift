@@ -19,7 +19,8 @@ let package = Package(
                 "WeatherFeature",
                 "DaybookPlatform",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-            ]
+            ],
+            resources: [.copy("Fixtures")]
         ),
     ]
 )
