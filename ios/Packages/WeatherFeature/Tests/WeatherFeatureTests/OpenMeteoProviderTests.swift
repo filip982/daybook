@@ -353,6 +353,78 @@ private final class URLBox: @unchecked Sendable {
         }
     }
 
+    @Test func tooManyRequestsIsAServerError() async throws {
+        let subject = try provider("forecast-vienna", statusCode: 429)
+
+        await #expect(throws: WeatherError.server) {
+            try await subject.forecast(for: vienna)
+        }
+    }
+
+    @Test func truncatedDailyArraysMapToAShorterForecast() async throws {
+        let body = try replacing("forecast-vienna") { root in
+            var daily = root["daily"] as? [String: Any] ?? [:]
+            for key in daily.keys {
+                if let array = daily[key] as? [Any] {
+                    daily[key] = Array(array.prefix(3))
+                }
+            }
+            root["daily"] = daily
+        }
+
+        let forecast = try await provider(body: body).forecast(for: vienna)
+
+        #expect(forecast.daily.count == 3)
+    }
+
+    @Test func truncatedHourlyArraysMapToAShorterForecast() async throws {
+        let body = try replacing("forecast-vienna") { root in
+            var hourly = root["hourly"] as? [String: Any] ?? [:]
+            for key in hourly.keys {
+                if let array = hourly[key] as? [Any] {
+                    hourly[key] = Array(array.prefix(5))
+                }
+            }
+            root["hourly"] = hourly
+        }
+
+        let forecast = try await provider(body: body).forecast(for: vienna)
+
+        #expect(forecast.hourly.count == 5)
+    }
+
+    @Test func emptyDailyArraysFailDecoding() async throws {
+        let body = try replacing("forecast-vienna") { root in
+            var daily = root["daily"] as? [String: Any] ?? [:]
+            for key in daily.keys {
+                if daily[key] is [Any] {
+                    daily[key] = []
+                }
+            }
+            root["daily"] = daily
+        }
+
+        await #expect(throws: WeatherError.decoding) {
+            try await provider(body: body).forecast(for: vienna)
+        }
+    }
+
+    @Test func emptyHourlyArraysFailDecoding() async throws {
+        let body = try replacing("forecast-vienna") { root in
+            var hourly = root["hourly"] as? [String: Any] ?? [:]
+            for key in hourly.keys {
+                if hourly[key] is [Any] {
+                    hourly[key] = []
+                }
+            }
+            root["hourly"] = hourly
+        }
+
+        await #expect(throws: WeatherError.decoding) {
+            try await provider(body: body).forecast(for: vienna)
+        }
+    }
+
     @Test(arguments: [
         URLError.Code.notConnectedToInternet,
         .networkConnectionLost,
@@ -526,6 +598,22 @@ private func queryItems(of url: URL) throws -> [String: String?] {
             UUID(uuidString: "00000000-0000-0000-0000-0000004D3642"),
         ]
         #expect(!results.contains { skipped.contains($0.id) })
+    }
+
+    @Test func resultsWithoutAdmin1OrCountryStillMapWithNilRegionAndCountry() async throws {
+        let body = try replacing("search-lisbon") { root in
+            var results = root["results"] as? [[String: Any]] ?? []
+            results[1].removeValue(forKey: "admin1")
+            results[1].removeValue(forKey: "country")
+            root["results"] = results
+        }
+
+        let results = try await provider(body: body).search("Lisbon")
+
+        #expect(results.count == 10)
+        let target = try #require(results.first { $0.id == UUID(uuidString: "00000000-0000-0000-0000-0000004EBFF7") })
+        #expect(target.region == nil)
+        #expect(target.country == nil)
     }
 }
 

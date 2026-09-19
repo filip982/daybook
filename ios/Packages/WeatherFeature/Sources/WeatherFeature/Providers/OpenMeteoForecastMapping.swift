@@ -89,7 +89,8 @@ private struct ForecastResponse: Decodable {
         }
 
         let hourCount = hourly.time.count
-        guard hourly.temperature2m.count == hourCount,
+        guard hourCount > 0,
+              hourly.temperature2m.count == hourCount,
               hourly.weatherCode.count == hourCount,
               hourly.precipitationProbability.count == hourCount,
               hourly.windGusts10m.count == hourCount,
@@ -97,7 +98,8 @@ private struct ForecastResponse: Decodable {
         else { throw .decoding }
 
         let dayCount = daily.time.count
-        guard daily.weatherCode.count == dayCount,
+        guard dayCount > 0,
+              daily.weatherCode.count == dayCount,
               daily.temperature2mMax.count == dayCount,
               daily.temperature2mMin.count == dayCount,
               daily.precipitationProbabilityMax.count == dayCount,
