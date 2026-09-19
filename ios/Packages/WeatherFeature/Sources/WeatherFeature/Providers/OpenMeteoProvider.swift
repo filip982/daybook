@@ -14,10 +14,16 @@ struct OpenMeteoProvider: WeatherProvider {
     ]
 
     private let session: URLSession
+    private let languageCode: String
     private let now: @Sendable () -> Date
 
-    init(session: URLSession = .shared, now: @escaping @Sendable () -> Date = { Date() }) {
+    init(
+        session: URLSession = .shared,
+        languageCode: String = "en",
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         self.session = session
+        self.languageCode = languageCode
         self.now = now
     }
 
@@ -27,8 +33,12 @@ struct OpenMeteoProvider: WeatherProvider {
         return try OpenMeteoForecastMapping.forecast(from: data, fetchedAt: now())
     }
 
-    func search(_: String) async throws(WeatherError) -> [SavedLocation] {
-        throw .server
+    func search(_ query: String) async throws(WeatherError) -> [SavedLocation] {
+        let name = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard name.count >= 2 else { return [] }
+        guard let url = Self.searchURL(name: name, languageCode: languageCode) else { throw .server }
+        let data = try await load(URLRequest(url: url))
+        return try OpenMeteoSearchMapping.locations(from: data)
     }
 
     private func load(_ request: URLRequest) async throws(WeatherError) -> Data {
@@ -75,6 +85,20 @@ struct OpenMeteoProvider: WeatherProvider {
             URLQueryItem(name: "timeformat", value: "unixtime"),
             URLQueryItem(name: "forecast_days", value: "10"),
             URLQueryItem(name: "forecast_hours", value: "24"),
+        ]
+        return components.url
+    }
+
+    private static func searchURL(name: String, languageCode: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "geocoding-api.open-meteo.com"
+        components.path = "/v1/search"
+        components.queryItems = [
+            URLQueryItem(name: "name", value: name),
+            URLQueryItem(name: "count", value: "10"),
+            URLQueryItem(name: "language", value: languageCode),
+            URLQueryItem(name: "format", value: "json"),
         ]
         return components.url
     }

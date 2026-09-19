@@ -382,6 +382,178 @@ private final class URLBox: @unchecked Sendable {
     }
 }
 
+private func searchProvider(
+    _ name: String,
+    statusCode: Int = 200,
+    languageCode: String = "en",
+    capturing captured: (@Sendable (URLRequest) -> Void)? = nil
+) throws -> OpenMeteoProvider {
+    let body = try StubNetwork.fixture(name)
+    return OpenMeteoProvider(
+        session: StubNetwork.session { request in
+            captured?(request)
+            return StubResponse(statusCode: statusCode, body: body)
+        },
+        languageCode: languageCode,
+        now: { fixedNow }
+    )
+}
+
+private final class CallCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func increment() {
+        lock.withLock { count += 1 }
+    }
+
+    var value: Int { lock.withLock { count } }
+}
+
+private func queryItems(of url: URL) throws -> [String: String?] {
+    let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+    let items = try #require(components.queryItems)
+    return Dictionary(uniqueKeysWithValues: items.map { ($0.name, $0.value) })
+}
+
+@Suite struct OpenMeteoSearchRequestTests {
+    @Test func requestUsesTheGeocodingEndpointWithATrimmedName() async throws {
+        let box = URLBox()
+        let subject = try searchProvider("search-lisbon") { box.store($0.url) }
+
+        _ = try await subject.search("  Lisbon ")
+
+        let url = try #require(box.value)
+        let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        let items = try queryItems(of: url)
+
+        #expect(components.scheme == "https")
+        #expect(components.host == "geocoding-api.open-meteo.com")
+        #expect(components.path == "/v1/search")
+        #expect(items["name"] == "Lisbon")
+        #expect(items["count"] == "10")
+        #expect(items["language"] == "en")
+        #expect(items["format"] == "json")
+        #expect(items.count == 4)
+    }
+
+    @Test func languageCodeComesFromTheInitializer() async throws {
+        let box = URLBox()
+        let subject = try searchProvider("search-lisbon", languageCode: "pt") { box.store($0.url) }
+
+        _ = try await subject.search("Lisbon")
+
+        let items = try queryItems(of: try #require(box.value))
+        #expect(items["language"] == "pt")
+    }
+
+    @Test func namesWithSpacesAndNonASCIICharactersArePercentEncoded() async throws {
+        let box = URLBox()
+        let subject = try searchProvider("search-lisbon") { box.store($0.url) }
+
+        _ = try await subject.search(" São Paulo ")
+
+        let url = try #require(box.value)
+        #expect(url.absoluteString.contains("S%C3%A3o%20Paulo") || url.absoluteString.contains("S%C3%A3o+Paulo"))
+
+        let items = try queryItems(of: url)
+        #expect(items["name"] == "São Paulo")
+    }
+
+    @Test func aQueryShorterThanTwoCharactersSkipsTheRequest() async throws {
+        let counter = CallCounter()
+        let body = try StubNetwork.fixture("search-lisbon")
+        let subject = OpenMeteoProvider(
+            session: StubNetwork.session { _ in
+                counter.increment()
+                return StubResponse(statusCode: 200, body: body)
+            },
+            now: { fixedNow }
+        )
+
+        #expect(try await subject.search("L").isEmpty)
+        #expect(try await subject.search(" a ").isEmpty)
+        #expect(try await subject.search("   ").isEmpty)
+        #expect(counter.value == 0)
+    }
+}
+
+@Suite struct OpenMeteoSearchMappingTests {
+    @Test func lisbonFixtureMapsTheFirstResult() async throws {
+        let subject = try searchProvider("search-lisbon")
+
+        let results = try await subject.search("Lisbon")
+
+        let lisbon = try #require(results.first)
+        #expect(lisbon.name == "Lisbon")
+        #expect(lisbon.country == "Portugal")
+        #expect(lisbon.region == "Lisbon District")
+        #expect(lisbon.timeZoneIdentifier == "Europe/Lisbon")
+        #expect(lisbon.coordinate == Coordinate(latitude: 38.72509, longitude: -9.1498))
+        #expect(lisbon.id == UUID(uuidString: "00000000-0000-0000-0000-0000002297B1"))
+        #expect(results.count == 10)
+    }
+
+    @Test func mappingTwiceYieldsEqualIdentifiers() async throws {
+        let first = try await searchProvider("search-lisbon").search("Lisbon")
+        let second = try await searchProvider("search-lisbon").search("Lisbon")
+
+        #expect(first.map(\.id) == second.map(\.id))
+    }
+
+    @Test func aResponseWithoutResultsIsAnEmptyArray() async throws {
+        let subject = try searchProvider("search-no-match")
+
+        #expect(try await subject.search("Zzzzzzz").isEmpty)
+    }
+
+    @Test func resultsWithAMissingOrInvalidTimeZoneAreSkipped() async throws {
+        let body = try replacing("search-lisbon") { root in
+            var results = root["results"] as? [[String: Any]] ?? []
+            results[1].removeValue(forKey: "timezone")
+            results[2]["timezone"] = "Mars/Olympus_Mons"
+            root["results"] = results
+        }
+
+        let results = try await provider(body: body).search("Lisbon")
+
+        #expect(results.count == 8)
+        #expect(results.first?.timeZoneIdentifier == "Europe/Lisbon")
+        #expect(results.allSatisfy { TimeZone(identifier: $0.timeZoneIdentifier) != nil })
+
+        let skipped = [
+            UUID(uuidString: "00000000-0000-0000-0000-0000004EBFF7"),
+            UUID(uuidString: "00000000-0000-0000-0000-0000004D3642"),
+        ]
+        #expect(!results.contains { skipped.contains($0.id) })
+    }
+}
+
+@Suite struct OpenMeteoSearchErrorTests {
+    @Test func transportFailureWithoutConnectivityIsOffline() async {
+        await #expect(throws: WeatherError.offline) {
+            try await failingProvider(.notConnectedToInternet).search("Lisbon")
+        }
+    }
+
+    @Test func serverFailureIsAServerError() async throws {
+        let subject = try searchProvider("search-lisbon", statusCode: 500)
+
+        await #expect(throws: WeatherError.server) {
+            try await subject.search("Lisbon")
+        }
+    }
+
+    @Test func truncatedJSONFailsDecoding() async throws {
+        let full = try StubNetwork.fixture("search-lisbon")
+        let body = Data(full.prefix(full.count / 2))
+
+        await #expect(throws: WeatherError.decoding) {
+            try await provider(body: body).search("Lisbon")
+        }
+    }
+}
+
 @Suite struct OpenMeteoDaySummaryTests {
     @Test func mappedForecastFeedsDaySummary() async throws {
         let fixture = try FixtureJSON("forecast-vienna")
