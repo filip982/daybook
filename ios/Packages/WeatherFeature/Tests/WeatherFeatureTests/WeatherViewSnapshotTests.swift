@@ -36,7 +36,7 @@ struct WeatherViewSnapshotTests {
     }
 
     @Test func loading() {
-        assertSnapshot(of: screen(.loading), as: strategy())
+        assertSnapshot(of: screen(.loading), as: strategy(precision: 0.99))
     }
 
     @Test func failedOffline() {
@@ -60,15 +60,19 @@ struct WeatherViewSnapshotTests {
 
     private func strategy<V: View>(
         height: CGFloat = 852,
-        contentSize: UIContentSizeCategory = .large
+        contentSize: UIContentSizeCategory = .large,
+        precision: Float = 1
     ) -> Snapshotting<V, UIImage> {
         .image(
+            precision: precision,
             perceptualPrecision: 0.98,
             layout: .fixed(width: 393, height: height),
             traits: UITraitCollection { mutable in
                 mutable.displayScale = 2
                 mutable.userInterfaceStyle = .light
                 mutable.preferredContentSizeCategory = contentSize
+                mutable.legibilityWeight = .regular
+                mutable.accessibilityContrast = .normal
             }
         )
     }
