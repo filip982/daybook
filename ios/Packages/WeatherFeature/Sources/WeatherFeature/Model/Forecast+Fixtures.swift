@@ -51,6 +51,16 @@ private func days(
     }
 }
 
+private func startOfHourContainingFixtureNow(_ zone: String) -> Date {
+    let calendar = gregorian(in: zone)
+    let components = calendar.dateComponents([.year, .month, .day, .hour], from: Forecast.fixtureNow)
+    return calendar.date(from: components)!
+}
+
+private func startOfDayContainingFixtureNow(_ zone: String) -> Date {
+    gregorian(in: zone).startOfDay(for: Forecast.fixtureNow)
+}
+
 private struct FixtureHour {
     let temperature: Double
     let wmo: Int
@@ -86,7 +96,7 @@ extension Forecast {
             windGustsKmh: 19
         ),
         hourly: hours(
-            from: date("Europe/Vienna", 2026, 9, 21, 9),
+            from: startOfHourContainingFixtureNow("Europe/Vienna"),
             [
                 FixtureHour(temperature: 18, wmo: 2, isDay: true, precipitationProbability: 5, gustsKmh: 18),
                 FixtureHour(temperature: 19, wmo: 2, isDay: true, precipitationProbability: 5, gustsKmh: 19),
@@ -116,7 +126,7 @@ extension Forecast {
         ),
         daily: days(
             "Europe/Vienna",
-            from: date("Europe/Vienna", 2026, 9, 21),
+            from: startOfDayContainingFixtureNow("Europe/Vienna"),
             [
                 FixtureDay(low: 11, high: 21, wmo: 2, precipitationProbability: 15,
                            sunriseHour: 6, sunriseMinute: 40, sunsetHour: 18, sunsetMinute: 55),
@@ -154,7 +164,7 @@ extension Forecast {
             windGustsKmh: 14
         ),
         hourly: hours(
-            from: date("America/Toronto", 2026, 9, 21, 3),
+            from: startOfHourContainingFixtureNow("America/Toronto"),
             [
                 FixtureHour(temperature: 12, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 14),
                 FixtureHour(temperature: 11, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 13),
@@ -184,7 +194,7 @@ extension Forecast {
         ),
         daily: days(
             "America/Toronto",
-            from: date("America/Toronto", 2026, 9, 21),
+            from: startOfDayContainingFixtureNow("America/Toronto"),
             [
                 FixtureDay(low: 10, high: 19, wmo: 0, precipitationProbability: 5,
                            sunriseHour: 7, sunriseMinute: 4, sunsetHour: 19, sunsetMinute: 16),
@@ -209,6 +219,142 @@ extension Forecast {
             ]
         ),
         fetchedAt: fixtureNow.addingTimeInterval(-2 * 3600)
+    )
+
+    static let fixtureLisbon = Forecast(
+        timeZone: TimeZone(identifier: "Europe/Lisbon")!,
+        current: CurrentConditions(
+            temperatureCelsius: 22,
+            apparentTemperatureCelsius: 22,
+            code: WeatherCode(wmo: 0),
+            isDay: true,
+            windSpeedKmh: 13,
+            windGustsKmh: 21
+        ),
+        hourly: hours(
+            from: startOfHourContainingFixtureNow("Europe/Lisbon"),
+            [
+                FixtureHour(temperature: 22, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 20),
+                FixtureHour(temperature: 23, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 21),
+                FixtureHour(temperature: 24, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 23),
+                FixtureHour(temperature: 25, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 25),
+                FixtureHour(temperature: 26, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 26),
+                FixtureHour(temperature: 26, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 27),
+                FixtureHour(temperature: 25, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 27),
+                FixtureHour(temperature: 25, wmo: 1, isDay: true, precipitationProbability: 0, gustsKmh: 26),
+                FixtureHour(temperature: 24, wmo: 1, isDay: true, precipitationProbability: 0, gustsKmh: 25),
+                FixtureHour(temperature: 23, wmo: 1, isDay: true, precipitationProbability: 0, gustsKmh: 23),
+                FixtureHour(temperature: 22, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 21),
+                FixtureHour(temperature: 21, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 19),
+                FixtureHour(temperature: 20, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 18),
+                FixtureHour(temperature: 20, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 17),
+                FixtureHour(temperature: 19, wmo: 0, isDay: false, precipitationProbability: 0, gustsKmh: 16),
+                FixtureHour(temperature: 19, wmo: 0, isDay: false, precipitationProbability: 5, gustsKmh: 15),
+                FixtureHour(temperature: 18, wmo: 1, isDay: false, precipitationProbability: 5, gustsKmh: 15),
+                FixtureHour(temperature: 18, wmo: 1, isDay: false, precipitationProbability: 5, gustsKmh: 14),
+                FixtureHour(temperature: 17, wmo: 1, isDay: false, precipitationProbability: 10, gustsKmh: 14),
+                FixtureHour(temperature: 17, wmo: 1, isDay: false, precipitationProbability: 10, gustsKmh: 15),
+                FixtureHour(temperature: 18, wmo: 0, isDay: true, precipitationProbability: 5, gustsKmh: 16),
+                FixtureHour(temperature: 20, wmo: 0, isDay: true, precipitationProbability: 5, gustsKmh: 18),
+                FixtureHour(temperature: 22, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 20),
+                FixtureHour(temperature: 24, wmo: 0, isDay: true, precipitationProbability: 0, gustsKmh: 22),
+            ]
+        ),
+        daily: days(
+            "Europe/Lisbon",
+            from: startOfDayContainingFixtureNow("Europe/Lisbon"),
+            [
+                FixtureDay(low: 17, high: 26, wmo: 0, precipitationProbability: 0,
+                           sunriseHour: 7, sunriseMinute: 15, sunsetHour: 19, sunsetMinute: 26),
+                FixtureDay(low: 17, high: 27, wmo: 0, precipitationProbability: 0,
+                           sunriseHour: 7, sunriseMinute: 16, sunsetHour: 19, sunsetMinute: 24),
+                FixtureDay(low: 18, high: 27, wmo: 1, precipitationProbability: 5,
+                           sunriseHour: 7, sunriseMinute: 17, sunsetHour: 19, sunsetMinute: 22),
+                FixtureDay(low: 18, high: 25, wmo: 2, precipitationProbability: 15,
+                           sunriseHour: 7, sunriseMinute: 18, sunsetHour: 19, sunsetMinute: 21),
+                FixtureDay(low: 17, high: 24, wmo: 2, precipitationProbability: 20,
+                           sunriseHour: 7, sunriseMinute: 19, sunsetHour: 19, sunsetMinute: 19),
+                FixtureDay(low: 16, high: 24, wmo: 1, precipitationProbability: 10,
+                           sunriseHour: 7, sunriseMinute: 20, sunsetHour: 19, sunsetMinute: 17),
+                FixtureDay(low: 16, high: 25, wmo: 0, precipitationProbability: 0,
+                           sunriseHour: 7, sunriseMinute: 21, sunsetHour: 19, sunsetMinute: 15),
+                FixtureDay(low: 17, high: 26, wmo: 0, precipitationProbability: 0,
+                           sunriseHour: 7, sunriseMinute: 22, sunsetHour: 19, sunsetMinute: 14),
+                FixtureDay(low: 17, high: 25, wmo: 1, precipitationProbability: 5,
+                           sunriseHour: 7, sunriseMinute: 23, sunsetHour: 19, sunsetMinute: 12),
+                FixtureDay(low: 16, high: 23, wmo: 3, precipitationProbability: 25,
+                           sunriseHour: 7, sunriseMinute: 24, sunsetHour: 19, sunsetMinute: 10),
+            ]
+        ),
+        fetchedAt: fixtureNow.addingTimeInterval(-5 * 60)
+    )
+
+    static let fixtureOslo = Forecast(
+        timeZone: TimeZone(identifier: "Europe/Oslo")!,
+        current: CurrentConditions(
+            temperatureCelsius: 9,
+            apparentTemperatureCelsius: 6,
+            code: WeatherCode(wmo: 61),
+            isDay: true,
+            windSpeedKmh: 16,
+            windGustsKmh: 29
+        ),
+        hourly: hours(
+            from: startOfHourContainingFixtureNow("Europe/Oslo"),
+            [
+                FixtureHour(temperature: 9, wmo: 61, isDay: true, precipitationProbability: 70, gustsKmh: 28),
+                FixtureHour(temperature: 9, wmo: 61, isDay: true, precipitationProbability: 75, gustsKmh: 30),
+                FixtureHour(temperature: 10, wmo: 61, isDay: true, precipitationProbability: 80, gustsKmh: 31),
+                FixtureHour(temperature: 10, wmo: 61, isDay: true, precipitationProbability: 80, gustsKmh: 31),
+                FixtureHour(temperature: 11, wmo: 61, isDay: true, precipitationProbability: 70, gustsKmh: 29),
+                FixtureHour(temperature: 11, wmo: 61, isDay: true, precipitationProbability: 60, gustsKmh: 27),
+                FixtureHour(temperature: 10, wmo: 3, isDay: true, precipitationProbability: 40, gustsKmh: 25),
+                FixtureHour(temperature: 10, wmo: 3, isDay: true, precipitationProbability: 30, gustsKmh: 23),
+                FixtureHour(temperature: 9, wmo: 3, isDay: true, precipitationProbability: 25, gustsKmh: 22),
+                FixtureHour(temperature: 9, wmo: 3, isDay: true, precipitationProbability: 20, gustsKmh: 20),
+                FixtureHour(temperature: 8, wmo: 3, isDay: false, precipitationProbability: 20, gustsKmh: 19),
+                FixtureHour(temperature: 8, wmo: 3, isDay: false, precipitationProbability: 15, gustsKmh: 18),
+                FixtureHour(temperature: 7, wmo: 2, isDay: false, precipitationProbability: 15, gustsKmh: 17),
+                FixtureHour(temperature: 7, wmo: 2, isDay: false, precipitationProbability: 10, gustsKmh: 16),
+                FixtureHour(temperature: 7, wmo: 2, isDay: false, precipitationProbability: 10, gustsKmh: 15),
+                FixtureHour(temperature: 6, wmo: 2, isDay: false, precipitationProbability: 10, gustsKmh: 14),
+                FixtureHour(temperature: 6, wmo: 3, isDay: false, precipitationProbability: 15, gustsKmh: 14),
+                FixtureHour(temperature: 6, wmo: 3, isDay: false, precipitationProbability: 20, gustsKmh: 15),
+                FixtureHour(temperature: 6, wmo: 3, isDay: false, precipitationProbability: 25, gustsKmh: 16),
+                FixtureHour(temperature: 7, wmo: 3, isDay: false, precipitationProbability: 30, gustsKmh: 17),
+                FixtureHour(temperature: 7, wmo: 61, isDay: true, precipitationProbability: 40, gustsKmh: 19),
+                FixtureHour(temperature: 8, wmo: 61, isDay: true, precipitationProbability: 45, gustsKmh: 21),
+                FixtureHour(temperature: 9, wmo: 3, isDay: true, precipitationProbability: 35, gustsKmh: 22),
+                FixtureHour(temperature: 10, wmo: 3, isDay: true, precipitationProbability: 30, gustsKmh: 23),
+            ]
+        ),
+        daily: days(
+            "Europe/Oslo",
+            from: startOfDayContainingFixtureNow("Europe/Oslo"),
+            [
+                FixtureDay(low: 6, high: 11, wmo: 61, precipitationProbability: 80,
+                           sunriseHour: 7, sunriseMinute: 2, sunsetHour: 19, sunsetMinute: 18),
+                FixtureDay(low: 6, high: 12, wmo: 61, precipitationProbability: 60,
+                           sunriseHour: 7, sunriseMinute: 4, sunsetHour: 19, sunsetMinute: 15),
+                FixtureDay(low: 5, high: 12, wmo: 3, precipitationProbability: 35,
+                           sunriseHour: 7, sunriseMinute: 6, sunsetHour: 19, sunsetMinute: 12),
+                FixtureDay(low: 4, high: 13, wmo: 2, precipitationProbability: 20,
+                           sunriseHour: 7, sunriseMinute: 8, sunsetHour: 19, sunsetMinute: 9),
+                FixtureDay(low: 4, high: 14, wmo: 1, precipitationProbability: 10,
+                           sunriseHour: 7, sunriseMinute: 10, sunsetHour: 19, sunsetMinute: 6),
+                FixtureDay(low: 5, high: 13, wmo: 2, precipitationProbability: 15,
+                           sunriseHour: 7, sunriseMinute: 12, sunsetHour: 19, sunsetMinute: 3),
+                FixtureDay(low: 6, high: 12, wmo: 3, precipitationProbability: 30,
+                           sunriseHour: 7, sunriseMinute: 14, sunsetHour: 19, sunsetMinute: 0),
+                FixtureDay(low: 6, high: 11, wmo: 61, precipitationProbability: 65,
+                           sunriseHour: 7, sunriseMinute: 16, sunsetHour: 18, sunsetMinute: 57),
+                FixtureDay(low: 5, high: 10, wmo: 61, precipitationProbability: 55,
+                           sunriseHour: 7, sunriseMinute: 18, sunsetHour: 18, sunsetMinute: 54),
+                FixtureDay(low: 4, high: 10, wmo: 3, precipitationProbability: 25,
+                           sunriseHour: 7, sunriseMinute: 20, sunsetHour: 18, sunsetMinute: 51),
+            ]
+        ),
+        fetchedAt: fixtureNow.addingTimeInterval(-5 * 60)
     )
 }
 

@@ -32,9 +32,50 @@ import Testing
 
         let forecast = try await store.refreshForecast(for: Coordinate(latitude: 1, longitude: 1))
 
-        #expect(forecast == .fixtureVienna)
+        #expect(forecast.timeZone.identifier == "Europe/Vienna")
+        #expect(forecast.fetchedAt == fixedNow)
+    }
+
+    @Test func theFixtureLaunchArgumentPinsTheClockToFixtureNow() {
+        #expect(LiveWeatherStore.clock(arguments: ["app", LiveWeatherStore.fixtureLaunchArgument])()
+            == Forecast.fixtureNow)
+    }
+
+    @Test func withNoExplicitNowFixtureModeServesAForecastThatIsFreshAtFixtureNow() async throws {
+        let cacheDirectory = try TemporaryDirectory()
+        let savedLocationsDirectory = try TemporaryDirectory()
+        let store = LiveWeatherStore.live(
+            arguments: ["app", LiveWeatherStore.fixtureLaunchArgument],
+            cacheDirectory: cacheDirectory.url,
+            savedLocationsURL: savedLocationsDirectory.url.appendingPathComponent("saved-locations.json")
+        )
+
+        let forecast = try await store.refreshForecast(for: Coordinate(latitude: 1, longitude: 1))
+
+        #expect(forecast.isStale(now: Forecast.fixtureNow) == false)
+    }
+
+    @Test func anExplicitNowWinsOverThePinnedFixtureClock() async throws {
+        let cacheDirectory = try TemporaryDirectory()
+        let savedLocationsDirectory = try TemporaryDirectory()
+        let explicitNow = Forecast.fixtureNow.addingTimeInterval(4321)
+        let store = LiveWeatherStore.live(
+            arguments: ["app", LiveWeatherStore.fixtureLaunchArgument],
+            cacheDirectory: cacheDirectory.url,
+            savedLocationsURL: savedLocationsDirectory.url.appendingPathComponent("saved-locations.json"),
+            now: { explicitNow }
+        )
+
+        let forecast = try await store.refreshForecast(for: Coordinate(latitude: 1, longitude: 1))
+
+        #expect(forecast.fetchedAt == explicitNow)
     }
     #endif
+
+    @Test func withoutTheFixtureArgumentTheClockIsTheRealClock() {
+        let reading = LiveWeatherStore.clock(arguments: ["app"])()
+        #expect(abs(reading.timeIntervalSinceNow) < 5)
+    }
 
     @Test func withoutTheFixtureArgumentTheStoreStartsWithAnEmptyCacheInAFreshDirectory() async throws {
         let cacheDirectory = try TemporaryDirectory()
