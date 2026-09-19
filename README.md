@@ -32,7 +32,7 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS, step 2 of 6. The Weather tab renders a full forecast screen from a fixture in every state, with Dynamic Type, VoiceOver and snapshot tests. Live data arrives in step 3.
+Phase 1, iOS, step 3 of 6. The Open-Meteo provider maps live forecast and place-search responses into the app's model with each city's own time zone, tested against recorded fixtures. The store and cache arrive in step 4.
 <img src="docs/images/weather-step2.png" alt="Weather tab, step 2" width="300">
 
 ## Build log
@@ -42,6 +42,7 @@ Phase 1, iOS, step 2 of 6. The Weather tab renders a full forecast screen from a
 | 2026-09-11 | Repo created. Scope and phase order fixed. |
 | 2026-09-19 | iOS step 1: two local Swift packages, XcodeGen app target, Makefile, layer lint, GitHub Actions test job. |
 | 2026-09-19 | iOS step 2: weather model, day summary rules, theme, formatter, WeatherView in all states, snapshot tests. |
+| 2026-09-19 | iOS step 3: Open-Meteo provider, geocoding, zone-correct mapping, per-test URL stubs, nightly live schema check. |
 
 ## Layout
 

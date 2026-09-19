@@ -15,6 +15,10 @@ ios-test:
 ios-snapshots-record:
 	cd $(PACKAGES)/WeatherFeature && TEST_RUNNER_SNAPSHOT_RECORD=1 xcodebuild test -scheme WeatherFeature -destination '$(DESTINATION)' -quiet
 
+.PHONY: ios-test-live
+ios-test-live:
+	cd $(PACKAGES)/WeatherFeature && TEST_RUNNER_LIVE_TESTS=1 xcodebuild test -scheme WeatherFeature -destination '$(DESTINATION)' -only-testing:WeatherFeatureTests/OpenMeteoLiveTests -quiet
+
 DERIVED := ios/build/DerivedData
 
 .PHONY: project ios-build ios-verify-bundle
