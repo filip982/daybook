@@ -14,7 +14,7 @@
 
 - Every task is exactly one commit, made directly on branch `develop`. Never commit to `main`. Never push.
 - Commit messages carry no `Co-Authored-By` trailer and no tool attribution.
-- Minimum deployment target iOS 18.0. Xcode 26.6, Swift 6.3.3. Swift 6 language mode (`swift-tools-version: 6.0`, `SWIFT_VERSION: "6.0"`).
+- Minimum deployment target iOS 18.0. Xcode 26.5, Swift 6.3.2. Swift 6 language mode (`swift-tools-version: 6.0`, `SWIFT_VERSION: "6.0"`).
 - Bundle identifier `com.blue-studio.daybook`.
 - Simulator destination for every build and test: `platform=iOS Simulator,name=iPhone 17,OS=26.5`.
 - No third-party dependencies in this step.

@@ -1,6 +1,11 @@
 DESTINATION ?= platform=iOS Simulator,name=iPhone 17,OS=26.5
 PACKAGES := ios/Packages
 
+.DEFAULT_GOAL := all
+
+.PHONY: all
+all: lint ios-test ios-verify-bundle
+
 .PHONY: ios-test
 ios-test:
 	cd $(PACKAGES)/DaybookPlatform && xcodebuild test -scheme DaybookPlatform -destination '$(DESTINATION)' -quiet
@@ -15,8 +20,8 @@ project:
 ios-build: project
 	xcodebuild build -project ios/Daybook.xcodeproj -scheme Daybook -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) -quiet CODE_SIGNING_ALLOWED=NO
 
-ios-verify-bundle:
-	scripts/verify-bundle.sh
+ios-verify-bundle: ios-build
+	scripts/verify-bundle.sh $(DERIVED)/Build/Products/Debug-iphonesimulator/Daybook.app
 
 .PHONY: lint
 lint:

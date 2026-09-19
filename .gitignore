@@ -7,3 +7,4 @@ ios/build/
 ios/*.xcodeproj
 ios/App/Info.plist
 *.p8
+*.xcresult
