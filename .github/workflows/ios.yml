@@ -1,0 +1,53 @@
+name: iOS
+
+on:
+  pull_request:
+    paths:
+      - "ios/**"
+      - "scripts/**"
+      - "Makefile"
+      - ".github/workflows/ios.yml"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "ios/**"
+      - "scripts/**"
+      - "Makefile"
+      - ".github/workflows/ios.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode 26.6
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.6.app || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+          xcodebuild -version | grep -q "Xcode 26.6"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Lint
+        run: make lint
+
+      - name: Test packages
+        run: make ios-test
+
+      - name: Build app
+        run: make ios-build
+
+      - name: Verify bundle
+        run: make ios-verify-bundle

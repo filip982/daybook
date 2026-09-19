@@ -32,13 +32,14 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS. Nothing to run yet. Watch the build log below.
+Phase 1, iOS, step 1 of 6. The app builds, tests and lints with `make lint ios-test ios-build`. It shows a placeholder screen. The forecast arrives in step 2.
 
 ## Build log
 
 | Date | Entry |
 |---|---|
 | 2026-09-11 | Repo created. Scope and phase order fixed. |
+| 2026-09-19 | iOS step 1: two local Swift packages, XcodeGen app target, Makefile, layer lint, GitHub Actions test job. |
 
 ## Layout
 
