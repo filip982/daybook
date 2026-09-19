@@ -1,0 +1,40 @@
+name: Daybook
+options:
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  DaybookPlatform:
+    path: Packages/DaybookPlatform
+  WeatherFeature:
+    path: Packages/WeatherFeature
+targets:
+  Daybook:
+    type: application
+    platform: iOS
+    sources:
+      - App
+    dependencies:
+      - package: DaybookPlatform
+      - package: WeatherFeature
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Daybook
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        NSLocationWhenInUseUsageDescription: Shows the weather where you are right now.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.blue-studio.daybook
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
