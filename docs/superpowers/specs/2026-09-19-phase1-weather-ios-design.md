@@ -112,7 +112,7 @@ protocol WeatherStore: Sendable {
 ### WeatherFeature / Providers
 
 - `WeatherProvider` (internal): `forecast(for:)` and `search(_:)`.
-- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability and wind gusts, `timezone=auto`, `forecast_days=10`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
+- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability and wind gusts, `timezone=auto`, `timeformat=unixtime`, `forecast_days=10`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
 - `FixtureProvider`, `#if DEBUG` only: serves bundled JSON for previews and UI tests, selected by a launch argument.
 
 ### WeatherFeature / UI
@@ -140,6 +140,7 @@ WeatherTab appears
 - "Today" is the first daily entry from the API, not a device-calendar comparison.
 - If the current location has no cache and no network, labels use the device zone until the first response.
 - Temperature, wind and precipitation are `Measurement` values formatted by Foundation, so locale and the system temperature setting apply, and VoiceOver reads "degrees Celsius".
+- Open-Meteo is asked for UNIX timestamps, so hours are true instants and DST days need no wall-clock parsing.
 
 ## 7. States
 

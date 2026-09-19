@@ -32,7 +32,7 @@ private struct ForecastResponse: Decodable {
     }
 
     struct Hourly: Decodable {
-        let time: [String]
+        let time: [Int]
         let temperature2m: [Double]
         let weatherCode: [Int]
         let precipitationProbability: [Int?]
@@ -50,13 +50,13 @@ private struct ForecastResponse: Decodable {
     }
 
     struct Daily: Decodable {
-        let time: [String]
+        let time: [Int]
         let weatherCode: [Int]
         let temperature2mMax: [Double]
         let temperature2mMin: [Double]
         let precipitationProbabilityMax: [Int?]
-        let sunrise: [String]
-        let sunset: [String]
+        let sunrise: [Int]
+        let sunset: [Int]
 
         enum CodingKeys: String, CodingKey {
             case time
@@ -88,9 +88,6 @@ private struct ForecastResponse: Decodable {
             throw .decoding
         }
 
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = zone
-
         let hourCount = hourly.time.count
         guard hourly.temperature2m.count == hourCount,
               hourly.weatherCode.count == hourCount,
@@ -108,40 +105,26 @@ private struct ForecastResponse: Decodable {
               daily.sunset.count == dayCount
         else { throw .decoding }
 
-        var hours: [HourForecast] = []
-        hours.reserveCapacity(hourCount)
-        for index in 0..<hourCount {
-            guard let time = calendar.dateFromMinuteStamp(hourly.time[index]) else { throw .decoding }
-            hours.append(
-                HourForecast(
-                    time: time,
-                    temperatureCelsius: hourly.temperature2m[index],
-                    code: WeatherCode(wmo: hourly.weatherCode[index]),
-                    isDay: hourly.isDay[index] == 1,
-                    precipitationProbability: hourly.precipitationProbability[index] ?? 0,
-                    windGustsKmh: hourly.windGusts10m[index] ?? 0
-                )
+        let hours = (0..<hourCount).map { index in
+            HourForecast(
+                time: Date(timeIntervalSince1970: Double(hourly.time[index])),
+                temperatureCelsius: hourly.temperature2m[index],
+                code: WeatherCode(wmo: hourly.weatherCode[index]),
+                isDay: hourly.isDay[index] == 1,
+                precipitationProbability: hourly.precipitationProbability[index] ?? 0,
+                windGustsKmh: hourly.windGusts10m[index] ?? 0
             )
         }
 
-        var days: [DayForecast] = []
-        days.reserveCapacity(dayCount)
-        for index in 0..<dayCount {
-            guard let date = calendar.dateFromDayStamp(daily.time[index]),
-                  let sunrise = calendar.dateFromMinuteStamp(daily.sunrise[index]),
-                  let sunset = calendar.dateFromMinuteStamp(daily.sunset[index])
-            else { throw .decoding }
-
-            days.append(
-                DayForecast(
-                    date: date,
-                    code: WeatherCode(wmo: daily.weatherCode[index]),
-                    highCelsius: daily.temperature2mMax[index],
-                    lowCelsius: daily.temperature2mMin[index],
-                    precipitationProbability: daily.precipitationProbabilityMax[index] ?? 0,
-                    sunrise: sunrise,
-                    sunset: sunset
-                )
+        let days = (0..<dayCount).map { index in
+            DayForecast(
+                date: Date(timeIntervalSince1970: Double(daily.time[index])),
+                code: WeatherCode(wmo: daily.weatherCode[index]),
+                highCelsius: daily.temperature2mMax[index],
+                lowCelsius: daily.temperature2mMin[index],
+                precipitationProbability: daily.precipitationProbabilityMax[index] ?? 0,
+                sunrise: Date(timeIntervalSince1970: Double(daily.sunrise[index])),
+                sunset: Date(timeIntervalSince1970: Double(daily.sunset[index]))
             )
         }
 
@@ -158,33 +141,6 @@ private struct ForecastResponse: Decodable {
             hourly: hours,
             daily: days,
             fetchedAt: fetchedAt
-        )
-    }
-}
-
-private extension Calendar {
-    func dateFromDayStamp(_ stamp: String) -> Date? {
-        let parts = stamp.split(separator: "-")
-        guard parts.count == 3,
-              let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2])
-        else { return nil }
-
-        return date(from: DateComponents(year: year, month: month, day: day))
-    }
-
-    func dateFromMinuteStamp(_ stamp: String) -> Date? {
-        let halves = stamp.split(separator: "T")
-        guard halves.count == 2 else { return nil }
-
-        let date = halves[0].split(separator: "-")
-        let clock = halves[1].split(separator: ":")
-        guard date.count == 3, clock.count == 2,
-              let year = Int(date[0]), let month = Int(date[1]), let day = Int(date[2]),
-              let hour = Int(clock[0]), let minute = Int(clock[1])
-        else { return nil }
-
-        return self.date(
-            from: DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
         )
     }
 }

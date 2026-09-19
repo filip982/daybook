@@ -33,10 +33,6 @@ private struct FixtureJSON {
         return try #require(values)
     }
 
-    func strings(_ key: String, _ field: String) throws -> [String] {
-        let values = try group(key)[field] as? [String]
-        return try #require(values)
-    }
 }
 
 private func replacing(_ name: String, _ transform: (inout [String: Any]) -> Void) throws -> Data {
@@ -79,6 +75,7 @@ private func failingProvider(_ code: URLError.Code) -> OpenMeteoProvider {
 }
 
 private let vienna = Coordinate(latitude: 48.20849, longitude: 16.37208)
+private let honoluluCoordinate = Coordinate(latitude: 21.31, longitude: -157.86)
 
 @Suite struct OpenMeteoRequestTests {
     @Test func requestMatchesTheRecordedFixtureURL() async throws {
@@ -101,9 +98,10 @@ private let vienna = Coordinate(latitude: 48.20849, longitude: 16.37208)
         #expect(items["hourly"] == "temperature_2m,weather_code,precipitation_probability,wind_gusts_10m,is_day")
         #expect(items["daily"] == "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset")
         #expect(items["timezone"] == "auto")
+        #expect(items["timeformat"] == "unixtime")
         #expect(items["forecast_days"] == "10")
         #expect(items["forecast_hours"] == "24")
-        #expect(items.count == 8)
+        #expect(items.count == 9)
     }
 }
 
@@ -148,13 +146,31 @@ private final class URLBox: @unchecked Sendable {
         #expect(forecast.daily.map(\.lowCelsius) == (try fixture.doubles("daily", "temperature_2m_min")))
         #expect(forecast.daily.map(\.precipitationProbability) == (try fixture.ints("daily", "precipitation_probability_max")))
 
+        let hourStamps = try fixture.ints("hourly", "time")
+        let dayStamps = try fixture.ints("daily", "time")
+        #expect(forecast.hourly.map(\.time.timeIntervalSince1970) == hourStamps.map(Double.init))
+        #expect(forecast.daily.map(\.date.timeIntervalSince1970) == dayStamps.map(Double.init))
+
         let hours = forecast.hourly.map(\.time)
         for (earlier, later) in zip(hours, hours.dropFirst()) {
             #expect(later.timeIntervalSince(earlier) == 3600)
         }
     }
 
-    @Test func sunriseAndSunsetParseInTheResponseZone() async throws {
+    @Test func sunriseAndSunsetAreTheInstantsFromTheFixture() async throws {
+        let fixture = try FixtureJSON("forecast-vienna")
+        let subject = try provider("forecast-vienna")
+
+        let forecast = try await subject.forecast(for: vienna)
+
+        let sunrises = try fixture.ints("daily", "sunrise")
+        let sunsets = try fixture.ints("daily", "sunset")
+
+        #expect(forecast.daily.map(\.sunrise.timeIntervalSince1970) == sunrises.map(Double.init))
+        #expect(forecast.daily.map(\.sunset.timeIntervalSince1970) == sunsets.map(Double.init))
+    }
+
+    @Test func viennaDaysStartAtLocalMidnight() async throws {
         let fixture = try FixtureJSON("forecast-vienna")
         let subject = try provider("forecast-vienna")
 
@@ -162,53 +178,48 @@ private final class URLBox: @unchecked Sendable {
 
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try fixture.timeZone
-        let expected = try fixture.strings("daily", "sunrise")
 
-        for (day, string) in zip(forecast.daily, expected) {
-            let parts = string.split(separator: "T")
-            let clock = parts[1].split(separator: ":")
-            let components = calendar.dateComponents([.hour, .minute], from: day.sunrise)
-            #expect(components.hour == Int(clock[0]))
-            #expect(components.minute == Int(clock[1]))
-        }
-
-        let sunsets = try fixture.strings("daily", "sunset")
-        for (day, string) in zip(forecast.daily, sunsets) {
-            let clock = string.split(separator: "T")[1].split(separator: ":")
-            let components = calendar.dateComponents([.hour, .minute], from: day.sunset)
-            #expect(components.hour == Int(clock[0]))
-            #expect(components.minute == Int(clock[1]))
+        for day in forecast.daily {
+            #expect(calendar.startOfDay(for: day.date) == day.date)
         }
     }
 }
 
 @Suite struct OpenMeteoTimeZoneTests {
     @Test func honoluluDaysStartAtLocalMidnightNotViennaMidnight() async throws {
-        let fixture = try FixtureJSON("forecast-honolulu")
         let subject = try provider("forecast-honolulu")
 
-        let forecast = try await subject.forecast(for: Coordinate(latitude: 21.31, longitude: -157.86))
+        let forecast = try await subject.forecast(for: honoluluCoordinate)
 
         #expect(forecast.timeZone.identifier == "Pacific/Honolulu")
-
-        let dailyTimes = try fixture.strings("daily", "time")
-        let firstDay = try #require(dailyTimes.first)
-        let parts = firstDay.split(separator: "-").compactMap { Int($0) }
-        var components = DateComponents()
-        components.year = parts[0]
-        components.month = parts[1]
-        components.day = parts[2]
 
         var honolulu = Calendar(identifier: .gregorian)
         honolulu.timeZone = try #require(TimeZone(identifier: "Pacific/Honolulu"))
         var viennaCalendar = Calendar(identifier: .gregorian)
         viennaCalendar.timeZone = try #require(TimeZone(identifier: "Europe/Vienna"))
 
-        let expected = try #require(honolulu.date(from: components))
-        let wrongZone = try #require(viennaCalendar.date(from: components))
+        let first = forecast.daily[0].date
+        #expect(honolulu.startOfDay(for: first) == first)
+        #expect(viennaCalendar.startOfDay(for: first) != first)
 
-        #expect(forecast.daily[0].date == expected)
-        #expect(forecast.daily[0].date != wrongZone)
+        for day in forecast.daily {
+            #expect(honolulu.startOfDay(for: day.date) == day.date)
+        }
+    }
+
+    @Test func honoluluHoursSitOnTheHourInTheResponseZone() async throws {
+        let subject = try provider("forecast-honolulu")
+
+        let forecast = try await subject.forecast(for: honoluluCoordinate)
+
+        var honolulu = Calendar(identifier: .gregorian)
+        honolulu.timeZone = try #require(TimeZone(identifier: "Pacific/Honolulu"))
+
+        for hour in forecast.hourly {
+            let parts = honolulu.dateComponents([.minute, .second], from: hour.time)
+            #expect(parts.minute == 0)
+            #expect(parts.second == 0)
+        }
     }
 
     @Test func unknownZoneIdentifierFallsBackToTheUTCOffset() async throws {
@@ -223,23 +234,35 @@ private final class URLBox: @unchecked Sendable {
         #expect(forecast.timeZone.secondsFromGMT() == offset)
     }
 
-    @Test func honoluluHoursRenderWithTheHourWrittenInTheFixture() async throws {
-        let fixture = try FixtureJSON("forecast-honolulu")
-        let subject = try provider("forecast-honolulu")
+    @Test func fallBackDayKeepsTwentyFourDistinctHoursAndRepeatsTheLocalHour() async throws {
+        // 2026-10-24T22:00:00Z = 00:00 local on 2026-10-25, the Vienna fall-back day.
+        let startOfFallBackDay = 1_792_879_200
+        let stamps = (0..<24).map { startOfFallBackDay + $0 * 3600 }
+        let body = try replacing("forecast-vienna") { root in
+            var hourly = root["hourly"] as? [String: Any] ?? [:]
+            hourly["time"] = stamps
+            hourly["temperature_2m"] = Array(repeating: 10.0, count: 24)
+            hourly["weather_code"] = Array(repeating: 0, count: 24)
+            hourly["precipitation_probability"] = Array(repeating: 0, count: 24)
+            hourly["wind_gusts_10m"] = Array(repeating: 5.0, count: 24)
+            hourly["is_day"] = Array(repeating: 1, count: 24)
+            root["hourly"] = hourly
+        }
 
-        let forecast = try await subject.forecast(for: Coordinate(latitude: 21.31, longitude: -157.86))
+        let forecast = try await provider(body: body).forecast(for: vienna)
 
-        var honolulu = Calendar(identifier: .gregorian)
-        honolulu.timeZone = try #require(TimeZone(identifier: "Pacific/Honolulu"))
+        let times = forecast.hourly.map(\.time)
+        #expect(times.count == 24)
+        #expect(Set(times).count == 24)
+        for (earlier, later) in zip(times, times.dropFirst()) {
+            #expect(later.timeIntervalSince(earlier) == 3600)
+        }
 
-        let hourlyTimes = try fixture.strings("hourly", "time")
-        let firstString = try #require(hourlyTimes.first)
-        let clock = firstString.split(separator: "T")[1].split(separator: ":")
-        let firstHour = try #require(forecast.hourly.first)
-        let rendered = honolulu.dateComponents([.hour, .minute], from: firstHour.time)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Europe/Vienna"))
+        let hours = times.map { calendar.component(.hour, from: $0) }
 
-        #expect(rendered.hour == Int(clock[0]))
-        #expect(rendered.minute == Int(clock[1]))
+        #expect(Array(hours.prefix(6)) == [0, 1, 2, 2, 3, 4])
     }
 }
 
@@ -247,31 +270,34 @@ private final class URLBox: @unchecked Sendable {
     @Test func nullPrecipitationProbabilitiesBecomeZero() async throws {
         let body = try replacing("forecast-vienna") { root in
             var hourly = root["hourly"] as? [String: Any] ?? [:]
-            let count = (hourly["time"] as? [String])?.count ?? 0
+            let count = (hourly["time"] as? [Int])?.count ?? 0
             hourly["precipitation_probability"] = Array(repeating: NSNull(), count: count)
             root["hourly"] = hourly
         }
 
         let forecast = try await provider(body: body).forecast(for: vienna)
 
+        #expect(forecast.hourly.count == 24)
         #expect(forecast.hourly.allSatisfy { $0.precipitationProbability == 0 })
     }
 
     @Test func nullDailyProbabilityAndGustsBecomeZero() async throws {
         let body = try replacing("forecast-vienna") { root in
             var daily = root["daily"] as? [String: Any] ?? [:]
-            let dayCount = (daily["time"] as? [String])?.count ?? 0
+            let dayCount = (daily["time"] as? [Int])?.count ?? 0
             daily["precipitation_probability_max"] = Array(repeating: NSNull(), count: dayCount)
             root["daily"] = daily
 
             var hourly = root["hourly"] as? [String: Any] ?? [:]
-            let hourCount = (hourly["time"] as? [String])?.count ?? 0
+            let hourCount = (hourly["time"] as? [Int])?.count ?? 0
             hourly["wind_gusts_10m"] = Array(repeating: NSNull(), count: hourCount)
             root["hourly"] = hourly
         }
 
         let forecast = try await provider(body: body).forecast(for: vienna)
 
+        #expect(forecast.daily.count == 10)
+        #expect(forecast.hourly.count == 24)
         #expect(forecast.daily.allSatisfy { $0.precipitationProbability == 0 })
         #expect(forecast.hourly.allSatisfy { $0.windGustsKmh == 0 })
     }
@@ -281,7 +307,7 @@ private final class URLBox: @unchecked Sendable {
     @Test func mismatchedHourlyArrayLengthsFailDecoding() async throws {
         let body = try replacing("forecast-vienna") { root in
             var hourly = root["hourly"] as? [String: Any] ?? [:]
-            hourly["temperature_2m"] = (hourly["temperature_2m"] as? [Double])?.dropLast().map { $0 }
+            hourly["temperature_2m"] = (hourly["temperature_2m"] as? [Double]).map { Array($0.dropLast()) }
             root["hourly"] = hourly
         }
 
@@ -293,7 +319,7 @@ private final class URLBox: @unchecked Sendable {
     @Test func mismatchedDailyArrayLengthsFailDecoding() async throws {
         let body = try replacing("forecast-vienna") { root in
             var daily = root["daily"] as? [String: Any] ?? [:]
-            daily["sunset"] = (daily["sunset"] as? [String])?.dropLast().map { $0 }
+            daily["sunset"] = (daily["sunset"] as? [Int]).map { Array($0.dropLast()) }
             root["daily"] = daily
         }
 
@@ -363,20 +389,8 @@ private final class URLBox: @unchecked Sendable {
 
         let forecast = try await subject.forecast(for: vienna)
 
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = try fixture.timeZone
-        let time = try fixture.group("current")["time"] as? String
-        let currentTime = try #require(time)
-        let date = currentTime.split(separator: "T")
-        let day = date[0].split(separator: "-").compactMap { Int($0) }
-        let clock = date[1].split(separator: ":").compactMap { Int($0) }
-        var components = DateComponents()
-        components.year = day[0]
-        components.month = day[1]
-        components.day = day[2]
-        components.hour = clock[0]
-        components.minute = clock[1]
-        let now = try #require(calendar.date(from: components))
+        let stamp = try fixture.group("current")["time"] as? Int
+        let now = Date(timeIntervalSince1970: Double(try #require(stamp)))
 
         #expect(DaySummary.make(from: forecast, now: now) != nil)
     }

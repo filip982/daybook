@@ -57,8 +57,8 @@ import Testing
         let object = try JSONSerialization.jsonObject(with: StubNetwork.fixture("forecast-vienna")) as? [String: Any]
         let root = try #require(object)
 
-        let hourlyTimes = try #require((root["hourly"] as? [String: Any])?["time"] as? [String])
-        let dailyTimes = try #require((root["daily"] as? [String: Any])?["time"] as? [String])
+        let hourlyTimes = try #require((root["hourly"] as? [String: Any])?["time"] as? [Int])
+        let dailyTimes = try #require((root["daily"] as? [String: Any])?["time"] as? [Int])
 
         #expect(root["timezone"] as? String == "Europe/Vienna")
         #expect(hourlyTimes.count == 24)

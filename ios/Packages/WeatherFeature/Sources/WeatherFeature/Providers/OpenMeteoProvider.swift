@@ -72,6 +72,7 @@ struct OpenMeteoProvider: WeatherProvider {
                 value: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
             ),
             URLQueryItem(name: "timezone", value: "auto"),
+            URLQueryItem(name: "timeformat", value: "unixtime"),
             URLQueryItem(name: "forecast_days", value: "10"),
             URLQueryItem(name: "forecast_hours", value: "24"),
         ]
