@@ -4,7 +4,7 @@ Date: 2026-09-19. Status: draft for owner review. Nothing is built yet.
 
 ## 1. Goal
 
-A Weather tab for iOS that the family checks in the morning: current location first, then saved family locations, each with current conditions, the next 24 hours and a 7-day forecast. Pure Swift first, shipped to TestFlight. Phase 1b then moves networking, caching and mapping into the shared Rust core in separate commits, so the git history shows the migration.
+A Weather tab for iOS that the family checks in the morning: current location first, then saved family locations, each with current conditions, the next 24 hours and a 10-day forecast. Pure Swift first, shipped to TestFlight. Phase 1b then moves networking, caching and mapping into the shared Rust core in separate commits, so the git history shows the migration.
 
 Phase 1 is done when:
 
@@ -38,6 +38,7 @@ Phase 1 is done when:
 | 17 | TestFlight only for now | Open-Meteo's free tier is non-commercial; a store release needs a licence decision |
 | 18 | iOS 18 minimum, Xcode 26.6 / Swift 6.3.3 pinned, Swift 6 language mode | Owner decision; two majors behind iOS 27 |
 | 19 | Bundle identifier `com.blue-studio.daybook` | Owner decision |
+| 20 | Hourly strip plus a 10-day forecast | Owner decision; the README scope line is updated to match |
 
 ## 3. Layout
 
@@ -80,7 +81,7 @@ Phase 1 shows no tab bar, because a tab bar with one item is wrong on iOS. `Dayb
 
 ### WeatherFeature / Model
 
-- `Forecast`: `timeZone`, `current`, `hourly` (24 entries), `daily` (7 entries), `fetchedAt`. `isStale(now:)` is pure and uses a 30 minute TTL.
+- `Forecast`: `timeZone`, `current`, `hourly` (24 entries), `daily` (10 entries), `fetchedAt`. `isStale(now:)` is pure and uses a 30 minute TTL.
 - `WeatherCode`: WMO code mapped to condition, SF Symbol name and spoken description, with day and night variants.
 - `SavedLocation`: id, name, region, country, coordinate, time zone identifier.
 - `WeatherError`: flat enum `offline`, `server`, `decoding`, `notFound`. Plain values only, so UniFFI can carry the same shapes in Phase 1b.
@@ -108,14 +109,14 @@ protocol WeatherStore: Sendable {
 ### WeatherFeature / Providers
 
 - `WeatherProvider` (internal): `forecast(for:)` and `search(_:)`.
-- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability, `timezone=auto`, `forecast_days=7`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
+- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability, `timezone=auto`, `forecast_days=10`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
 - `FixtureProvider`, `#if DEBUG` only: serves bundled JSON for previews and UI tests, selected by a launch argument.
 
 ### WeatherFeature / UI
 
 - `WeatherTab(location:)` is the only public type. It builds `WeatherViewModel(store: LiveWeatherStore.live(), location:)`.
 - `WeatherViewModel`, `@MainActor @Observable`, no default arguments.
-- `WeatherView` (header, hourly strip, 7-day list with range bars, attribution footer), `LocationsView` (current location first, saved cities with local time, search, delete and reorder).
+- `WeatherView` (header, hourly strip, 10-day list with range bars, attribution footer), `LocationsView` (current location first, saved cities with local time, search, delete and reorder).
 
 ## 5. Data flow
 
@@ -216,6 +217,5 @@ Merge strategy and a second provider; location streaming, background location, "
 ## 15. Open items
 
 1. Morning summary line, for example "Rain likely 08:00–10:00". The mockup shows one. It is the cheapest family-specific detail, but it is new scope and is excluded until the owner says yes.
-2. The hourly strip is an assumption. The README says current plus 7-day; the approved mockup shows the next hours, and it costs one request parameter. It stays unless the owner removes it.
-3. Whether "Daybook" is free as a store name, and the Apple team ID. Both are needed only at step 6.
-4. HTTP inside Rust or a native port. Decide at Phase 1b.
+2. Whether "Daybook" is free as a store name, and the Apple team ID. Both are needed only at step 6.
+3. HTTP inside Rust or a native port. Decide at Phase 1b.

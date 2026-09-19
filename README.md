@@ -19,7 +19,7 @@ Sensors, audio, AR and BLE stay native on every client. Business logic lives in 
 
 Order is fixed, timing is not. Each phase ships to TestFlight and Play before the next starts.
 
-1. **Weather** — Open-Meteo, current + 7-day, local cache, CI from day one.
+1. **Weather** — Open-Meteo, current + hourly + 10-day, local cache, CI from day one.
 2. **News** — public RSS only, dedupe, rank by freshness and engagement, preference weights with a forgetting curve.
 3. **Notes** — offline-first, local DB + sync queue, voice to structured note. AI last: cloud streaming vs on-device, both shown, tradeoff documented.
 4. **Health** — pedometer, HealthKit / Health Connect, widget.
