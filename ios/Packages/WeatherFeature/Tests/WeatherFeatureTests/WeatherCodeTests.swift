@@ -52,4 +52,18 @@ import Testing
         let code = WeatherCode(wmo: wmo)
         #expect(code.symbolName(isDay: true) == code.symbolName(isDay: false))
     }
+
+    @Test(arguments: [
+        (51, PrecipitationIntensity.light), (56, .light), (61, .light), (66, .light), (71, .light), (80, .light), (85, .light),
+        (53, .moderate), (63, .moderate), (73, .moderate), (81, .moderate),
+        (55, .heavy), (57, .heavy), (65, .heavy), (67, .heavy), (75, .heavy), (82, .heavy), (86, .heavy),
+    ] as [(Int, PrecipitationIntensity)])
+    func intensityMatchesWMOTable(wmo: Int, expected: PrecipitationIntensity) {
+        #expect(WeatherCode(wmo: wmo).intensity == expected)
+    }
+
+    @Test(arguments: [0, 3, 45, 95])
+    func intensityIsNilForCodesWithoutOne(wmo: Int) {
+        #expect(WeatherCode(wmo: wmo).intensity == nil)
+    }
 }

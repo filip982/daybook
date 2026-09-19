@@ -160,14 +160,15 @@ struct WeatherFormatter: Sendable {
     }
 
     private func spokenCondition(_ code: WeatherCode) -> String {
-        switch code.wmo {
-        case 61: "Light rain"
-        case 63: "Moderate rain"
-        case 65: "Heavy rain"
-        case 71: "Light snow"
-        case 73: "Moderate snow"
-        case 75: "Heavy snow"
-        default: conditionName(code.condition)
+        guard let intensity = code.intensity else { return conditionName(code.condition) }
+        return "\(intensityName(intensity)) \(conditionName(code.condition).lowercased())"
+    }
+
+    private func intensityName(_ intensity: PrecipitationIntensity) -> String {
+        switch intensity {
+        case .light: "Light"
+        case .moderate: "Moderate"
+        case .heavy: "Heavy"
         }
     }
 }

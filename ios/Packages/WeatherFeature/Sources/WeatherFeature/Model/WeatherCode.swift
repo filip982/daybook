@@ -5,6 +5,8 @@ enum WeatherCondition: String, Sendable, Codable, CaseIterable {
 
 enum PrecipitationKind: String, Sendable, Codable { case rain, snow, thunderstorm }
 
+enum PrecipitationIntensity: String, Sendable, Codable { case light, moderate, heavy }
+
 struct WeatherCode: Sendable, Codable, Hashable {
     let wmo: Int
 
@@ -48,6 +50,15 @@ struct WeatherCode: Sendable, Codable, Hashable {
         case .snow, .snowGrains, .snowShowers: .snow
         case .drizzle, .freezingDrizzle, .rain, .freezingRain, .rainShowers: .rain
         case .clear, .mostlyClear, .partlyCloudy, .overcast, .fog, .unknown: nil
+        }
+    }
+
+    var intensity: PrecipitationIntensity? {
+        switch wmo {
+        case 51, 56, 61, 66, 71, 80, 85: .light
+        case 53, 63, 73, 81: .moderate
+        case 55, 57, 65, 67, 75, 82, 86: .heavy
+        default: nil
         }
     }
 
