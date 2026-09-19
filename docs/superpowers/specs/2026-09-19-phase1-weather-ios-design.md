@@ -4,7 +4,9 @@ Date: 2026-09-19. Status: draft for owner review. Nothing is built yet.
 
 ## 1. Goal
 
-A Weather tab for iOS that the family checks in the morning: current location first, then saved family locations, each with current conditions, the next 24 hours and a 10-day forecast. Pure Swift first, shipped to TestFlight. Phase 1b then moves networking, caching and mapping into the shared Rust core in separate commits, so the git history shows the migration.
+A Weather tab for iOS that the family checks in the morning: current location first, then saved family locations, each with current conditions, the next 24 hours and a 10-day forecast. Pure Swift first, shipped to TestFlight. Each forecast carries one plain-language morning summary line, such as "Rain likely 08:00–10:00".
+
+Phase 1b, the Rust extraction, is on hold. It starts only when the owner says so, and nothing in Phase 1 depends on it. When it happens, networking, caching and mapping move into the shared Rust core in separate commits, so the git history shows the migration.
 
 Phase 1 is done when:
 
@@ -13,13 +15,12 @@ Phase 1 is done when:
 3. The accessibility checks in section 9 pass.
 4. `make ios-test` is green locally and in GitHub Actions.
 5. A build pushed as a `v*` tag appears in TestFlight for internal testers.
-6. Phase 1b has landed: the store is Rust-backed and the store contract tests pass unchanged.
 
 ## 2. Decisions
 
 | # | Decision | Reason |
 |---|---|---|
-| 1 | Swift first, Rust second (Phase 1b) | Owner wants the migration visible in git history |
+| 1 | Swift first, Rust second (Phase 1b, on hold until the owner's go) | Owner wants the migration visible in git history |
 | 2 | One SPM package per tab, one target inside, layers as folders | No layer modules, no import noise, `public` only on the tab entry |
 | 3 | Folders depend downward only: UI → Store → Providers → Model | Any folder can become a target later by moving it; a CI grep enforces it |
 | 4 | One shared package `DaybookPlatform`, single target | Coordinate, location and theme are needed by every future tab |
@@ -39,6 +40,7 @@ Phase 1 is done when:
 | 18 | iOS 18 minimum, Xcode 26.6 / Swift 6.3.3 pinned, Swift 6 language mode | Owner decision; two majors behind iOS 27 |
 | 19 | Bundle identifier `com.blue-studio.daybook` | Owner decision |
 | 20 | Hourly strip plus a 10-day forecast | Owner decision; the README scope line is updated to match |
+| 21 | Rule-based morning summary line per location | Owner decision; the cheapest detail that serves "morning weather for the family" |
 
 ## 3. Layout
 
@@ -83,6 +85,7 @@ Phase 1 shows no tab bar, because a tab bar with one item is wrong on iOS. `Dayb
 
 - `Forecast`: `timeZone`, `current`, `hourly` (24 entries), `daily` (10 entries), `fetchedAt`. `isStale(now:)` is pure and uses a 30 minute TTL.
 - `WeatherCode`: WMO code mapped to condition, SF Symbol name and spoken description, with day and night variants.
+- `DaySummary.make(from:now:)`: a pure function that returns one sentence for the rest of today in the location's time zone. The first matching rule wins: a precipitation window of at least 50 % probability in the next 12 hours ("Rain likely 08:00–10:00", with snow or thunderstorm taken from the weather code), gusts of 50 km/h or more ("Windy this afternoon, gusts up to 60 km/h"), a rise of 8° or more from now to the high ("Warming up to 21° by 15:00"), otherwise the condition and the high ("Partly cloudy, high 21°"). Strings are localized and use the same formatters as the rest of the screen.
 - `SavedLocation`: id, name, region, country, coordinate, time zone identifier.
 - `WeatherError`: flat enum `offline`, `server`, `decoding`, `notFound`. Plain values only, so UniFFI can carry the same shapes in Phase 1b.
 - `WeatherStore` protocol, the only thing the UI talks to:
@@ -109,14 +112,14 @@ protocol WeatherStore: Sendable {
 ### WeatherFeature / Providers
 
 - `WeatherProvider` (internal): `forecast(for:)` and `search(_:)`.
-- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability, `timezone=auto`, `forecast_days=10`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
+- `OpenMeteoProvider` on `URLSession`. Forecast: `api.open-meteo.com/v1/forecast` with current, hourly and daily variables including precipitation probability and wind gusts, `timezone=auto`, `forecast_days=10`, metric units. Search: `geocoding-api.open-meteo.com/v1/search`, which returns the city's time zone. DTOs are `private` to the file.
 - `FixtureProvider`, `#if DEBUG` only: serves bundled JSON for previews and UI tests, selected by a launch argument.
 
 ### WeatherFeature / UI
 
 - `WeatherTab(location:)` is the only public type. It builds `WeatherViewModel(store: LiveWeatherStore.live(), location:)`.
 - `WeatherViewModel`, `@MainActor @Observable`, no default arguments.
-- `WeatherView` (header, hourly strip, 10-day list with range bars, attribution footer), `LocationsView` (current location first, saved cities with local time, search, delete and reorder).
+- `WeatherView` (header, summary line above the hourly strip, 10-day list with range bars, attribution footer), `LocationsView` (current location first, saved cities with local time and their summary line, search, delete and reorder).
 
 ## 5. Data flow
 
@@ -171,7 +174,7 @@ Part of "done" for every screen:
 | UI smoke, 1–2 | XCUITest + accessibility audit | launch with `FixtureProvider`, open a saved city; location granted with `simctl privacy grant` | every PR |
 | Snapshots, about 6 | swift-snapshot-testing, custom views only, `perceptualPrecision` 0.98 | loading, loaded, error, offline-stale, largest text size, dark | every PR, on the exact Xcode and simulator recorded in the Makefile in step 1; recording is a deliberate commit |
 | Integration | Swift Testing | real `OpenMeteoProvider` + `LiveWeatherStore` + `FileForecastCache` in a temp directory | every PR |
-| Unit | Swift Testing, hand-written fakes | DTO mapping, `WeatherCode`, time zones around midnight for a far city, locale formatting, staleness, cache corruption, offline to online, cancellation, view model states, waiting queue with a fake fix source | every PR |
+| Unit | Swift Testing, hand-written fakes | DTO mapping, `WeatherCode`, day summary rules as a table of cases, time zones around midnight for a far city, locale formatting, staleness, cache corruption, offline to online, cancellation, view model states, waiting queue with a fake fix source | every PR |
 | Live schema check, 1 | Swift Testing, tag `live` | Open-Meteo still has the fields and types we decode; never asserts values | nightly, own workflow |
 
 - Network stubbing: each test builds its own `URLSession` with a stub `URLProtocol` and a per-test key that selects the response from a lock-protected table. No shared static handler, because Swift Testing runs tests in parallel in one process.
@@ -194,14 +197,14 @@ Each step starts with failing tests, lands as its own commits on a feature branc
 | # | Step | Verify |
 |---|---|---|
 | 1 | Project and CI: XcodeGen, two packages, Makefile, `ios.yml` test job, privacy manifest, Info.plist keys, layer lint | green Actions run |
-| 2 | Static screen from a fixture: Model, `FixtureProvider`, `WeatherView` states, Theme, Dynamic Type and VoiceOver | snapshot tests; README screenshot |
+| 2 | Static screen from a fixture: Model with `DaySummary`, `FixtureProvider`, `WeatherView` states, Theme, Dynamic Type and VoiceOver | snapshot tests; README screenshot |
 | 3 | Open-Meteo provider and geocoding: DTO mapping, time zones, `WeatherCode` | stubbed-session tests with fixtures |
 | 4 | Store and cache: cached and refresh paths, staleness, corruption, saved locations file | contract tests, integration test |
 | 5 | Location and all states: `LocationService`, search and saved list, pull to refresh, offline note | view model tests, UI smoke test with audit, simulator run |
 | 6 | Release pipeline to TestFlight. Can start any time after step 1, once the owner's manual steps are done | build visible in TestFlight |
-| 7 | Phase 1b: Rust core | store contract tests pass unchanged |
+| — | Phase 1b: Rust core. On hold, not part of this plan's execution until the owner's go | store contract tests pass unchanged |
 
-## 13. Phase 1b outline
+## 13. Phase 1b outline (on hold)
 
 - `core/` Rust crate with UniFFI, toolchain pinned in `rust-toolchain.toml` (1.87 or newer), iOS targets added, bindgen as a workspace member.
 - A shared Swift package wraps the xcframework. Generated bindings sit in their own target with relaxed concurrency settings; a small mapping layer converts UniFFI records into the existing `Forecast` and `WeatherError`.
@@ -212,10 +215,9 @@ Each step starts with failing tests, lands as its own commits on a feature branc
 
 ## 14. Out of scope
 
-Merge strategy and a second provider; location streaming, background location, "always" permission; widgets; settings screen; database; backend; design-token pipeline; App Store release; a generated "morning summary" sentence (see open items).
+Merge strategy and a second provider; location streaming, background location, "always" permission; widgets; settings screen; database; backend; design-token pipeline; App Store release; any Rust work until the owner's go.
 
 ## 15. Open items
 
-1. Morning summary line, for example "Rain likely 08:00–10:00". The mockup shows one. It is the cheapest family-specific detail, but it is new scope and is excluded until the owner says yes.
-2. Whether "Daybook" is free as a store name, and the Apple team ID. Both are needed only at step 6.
-3. HTTP inside Rust or a native port. Decide at Phase 1b.
+1. Whether "Daybook" is free as a store name, and the Apple team ID. Both are needed only at step 6.
+2. HTTP inside Rust or a native port. Decide if and when Phase 1b starts.
