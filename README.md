@@ -32,7 +32,7 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS, step 3 of 6. The Open-Meteo provider maps live forecast and place-search responses into the app's model with each city's own time zone, tested against recorded fixtures. The store and cache arrive in step 4.
+Phase 1, iOS, step 4 of 6. A store serves the last forecast from a file cache, refreshes from Open-Meteo, survives corrupt files and no network, and keeps saved cities in Application Support. The screen gets live data and location in step 5.
 <img src="docs/images/weather-step2.png" alt="Weather tab, step 2" width="300">
 
 ## Build log
@@ -43,6 +43,7 @@ Phase 1, iOS, step 3 of 6. The Open-Meteo provider maps live forecast and place-
 | 2026-09-19 | iOS step 1: two local Swift packages, XcodeGen app target, Makefile, layer lint, GitHub Actions test job. |
 | 2026-09-19 | iOS step 2: weather model, day summary rules, theme, formatter, WeatherView in all states, snapshot tests. |
 | 2026-09-19 | iOS step 3: Open-Meteo provider, geocoding, zone-correct mapping, per-test URL stubs, nightly live schema check. |
+| 2026-09-19 | iOS step 4: forecast file cache, saved locations file, LiveWeatherStore, contract tests over a stubbed network, debug fixture provider. |
 
 ## Layout
 
