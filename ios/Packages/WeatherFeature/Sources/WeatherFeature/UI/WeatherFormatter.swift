@@ -33,6 +33,7 @@ struct WeatherFormatter: Sendable {
 
     func spokenTemperature(_ celsius: Double) -> String {
         Measurement(value: celsius, unit: UnitTemperature.celsius)
+            .converted(to: displayTemperatureUnit)
             .roundedAwayFromNegativeZero
             .formatted(
                 .measurement(
@@ -140,7 +141,7 @@ struct WeatherFormatter: Sendable {
     }
 
     private var displayTemperatureUnit: UnitTemperature {
-        locale.measurementSystem == .us ? .fahrenheit : .celsius
+        UnitTemperature(forLocale: locale, usage: .weather)
     }
 
     private var hourSymbol: Date.FormatStyle.Symbol.Hour {

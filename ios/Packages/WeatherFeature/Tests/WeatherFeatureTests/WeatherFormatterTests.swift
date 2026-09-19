@@ -51,6 +51,31 @@ import Testing
         #expect(Self.metricFormatter.spokenTemperature(18) == "18 degrees Celsius")
     }
 
+    @Test func spokenTemperatureSpeaksTheUnitTheLabelShows() {
+        #expect(Self.imperialFormatter.spokenTemperature(18) == "64 degrees Fahrenheit")
+    }
+
+    @Test func anExplicitCelsiusOverrideBeatsTheRegion() {
+        let formatter = WeatherFormatter(locale: Locale(identifier: "en-US-u-mu-celsius"), timeZone: Self.vienna)
+
+        #expect(formatter.temperature(18) == "18°")
+        #expect(formatter.spokenTemperature(18) == "18 degrees Celsius")
+    }
+
+    @Test func anExplicitFahrenheitOverrideBeatsTheRegion() {
+        let formatter = WeatherFormatter(locale: Locale(identifier: "en-GB-u-mu-fahrenhe"), timeZone: Self.vienna)
+
+        #expect(formatter.temperature(18) == "64°")
+        #expect(formatter.spokenTemperature(18) == "64 degrees Fahrenheit")
+    }
+
+    @Test func britainMixesCelsiusWithMilesPerHour() {
+        let formatter = WeatherFormatter(locale: Locale(identifier: "en_GB"), timeZone: Self.vienna)
+
+        #expect(formatter.temperature(18) == "18°")
+        #expect(formatter.gusts(60).contains("mph"))
+    }
+
     @Test func spokenTemperatureAlsoAvoidsNegativeZero() {
         #expect(Self.metricFormatter.spokenTemperature(-0.4) == "0 degrees Celsius")
     }
