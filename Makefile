@@ -11,6 +11,10 @@ ios-test:
 	cd $(PACKAGES)/DaybookPlatform && xcodebuild test -scheme DaybookPlatform -destination '$(DESTINATION)' -quiet
 	cd $(PACKAGES)/WeatherFeature && xcodebuild test -scheme WeatherFeature -destination '$(DESTINATION)' -quiet
 
+.PHONY: ios-snapshots-record
+ios-snapshots-record:
+	cd $(PACKAGES)/WeatherFeature && TEST_RUNNER_SNAPSHOT_RECORD=1 xcodebuild test -scheme WeatherFeature -destination '$(DESTINATION)' -quiet
+
 DERIVED := ios/build/DerivedData
 
 .PHONY: project ios-build ios-verify-bundle

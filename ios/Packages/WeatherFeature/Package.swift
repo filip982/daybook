@@ -9,9 +9,17 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../DaybookPlatform"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.19.5"),
     ],
     targets: [
         .target(name: "WeatherFeature", dependencies: ["DaybookPlatform"]),
-        .testTarget(name: "WeatherFeatureTests", dependencies: ["WeatherFeature", "DaybookPlatform"]),
+        .testTarget(
+            name: "WeatherFeatureTests",
+            dependencies: [
+                "WeatherFeature",
+                "DaybookPlatform",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ]
+        ),
     ]
 )
