@@ -19,14 +19,18 @@ struct DailyCard: View {
                         .font(.system(size: titleIconSize))
                 }
                 .font(.caption.weight(.semibold))
+                .accessibilityElement(children: .combine)
                 .accessibilityAddTraits(.isHeader)
+                .accessibilityChartDescriptor(
+                    TemperatureRangeDescriptor(days: days, span: span, formatter: formatter, now: now)
+                )
 
-                ForEach(Array(days.enumerated()), id: \.offset) { index, day in
+                ForEach(days, id: \.date) { day in
                     Divider().overlay(theme.cardStroke)
                     DayRow(
                         day: day,
                         span: span,
-                        isToday: index == 0,
+                        isToday: day.date == days.first?.date,
                         currentCelsius: forecast.current.temperatureCelsius,
                         formatter: formatter,
                         now: now
@@ -34,9 +38,6 @@ struct DailyCard: View {
                     .padding(.vertical, theme.spacing.small / 2)
                 }
             }
-            .accessibilityChartDescriptor(
-                TemperatureRangeDescriptor(days: days, span: span, formatter: formatter, now: now)
-            )
         }
     }
 

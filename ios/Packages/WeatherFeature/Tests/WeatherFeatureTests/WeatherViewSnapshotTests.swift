@@ -47,6 +47,10 @@ struct WeatherViewSnapshotTests {
         assertSnapshot(of: screen(.locationNotAsked), as: strategy())
     }
 
+    @Test func locationDenied() {
+        assertSnapshot(of: screen(.locationDenied), as: strategy())
+    }
+
     private func screen(_ state: WeatherScreenState) -> some View {
         WeatherView(state: state, now: Self.now, locale: Self.locale)
             .environment(\.theme, .standard)

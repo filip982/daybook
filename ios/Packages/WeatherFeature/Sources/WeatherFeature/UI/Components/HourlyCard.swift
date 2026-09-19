@@ -31,7 +31,7 @@ struct HourlyCard: View {
     }
 
     private var hours: [HourForecast] {
-        Array(forecast.hourly.filter { $0.time >= startOfCurrentHour }.prefix(12))
+        forecast.hourly.filter { $0.time >= startOfCurrentHour }
     }
 
     private var startOfCurrentHour: Date {

@@ -40,12 +40,11 @@ struct DayRow: View {
             Text(formatter.temperature(day.lowCelsius))
                 .font(.body)
                 .frame(width: temperatureColumnWidth, alignment: .trailing)
-                .opacity(0.75)
 
             bar
 
             Text(formatter.temperature(day.highCelsius))
-                .font(.body)
+                .font(.body.weight(.semibold))
                 .frame(width: temperatureColumnWidth, alignment: .trailing)
         }
     }
@@ -61,16 +60,30 @@ struct DayRow: View {
             Text(conditionLine)
                 .font(.body)
 
-            HStack {
-                Text("Low \(formatter.temperature(day.lowCelsius))")
-                Spacer(minLength: theme.spacing.small)
-                Text("High \(formatter.temperature(day.highCelsius))")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: theme.spacing.small) {
+                    lowLabel
+                    Spacer(minLength: theme.spacing.small)
+                    highLabel
+                }
+                VStack(alignment: .leading, spacing: theme.spacing.small / 2) {
+                    lowLabel
+                    highLabel
+                }
             }
             .font(.body)
 
             bar
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var lowLabel: some View {
+        Text("Low \(formatter.temperature(day.lowCelsius))").fixedSize()
+    }
+
+    private var highLabel: some View {
+        Text("High \(formatter.temperature(day.highCelsius))").fixedSize()
     }
 
     private var conditionLine: String {
@@ -92,7 +105,6 @@ struct DayRow: View {
             if day.precipitationProbability >= 20 {
                 Text(formatter.percent(day.precipitationProbability))
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(Color(hue: 0.55, saturation: 0.55, brightness: 1))
             }
         }
     }

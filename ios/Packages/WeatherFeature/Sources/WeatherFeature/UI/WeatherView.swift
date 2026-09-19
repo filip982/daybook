@@ -82,7 +82,6 @@ struct WeatherView: View {
     private var attribution: some View {
         Text("Weather data by Open-Meteo.com · CC BY 4.0")
             .font(.caption2)
-            .opacity(0.8)
             .padding(.top, theme.spacing.small)
     }
 

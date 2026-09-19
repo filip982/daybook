@@ -29,7 +29,7 @@ struct TemperatureRangeBar: View {
                         )
                     )
                     .frame(width: length, height: height)
-                    .offset(x: min(start, width - length))
+                    .offset(x: max(min(start, width - length), 0))
 
                 if let currentCelsius {
                     Circle()

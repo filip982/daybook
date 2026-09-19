@@ -6,6 +6,7 @@ struct RGB: Sendable, Hashable {
     var blue: Double
 
     static let white = RGB(red: 1, green: 1, blue: 1)
+    static let black = RGB(red: 0, green: 0, blue: 0)
 
     var color: Color {
         Color(.sRGB, red: red, green: green, blue: blue, opacity: 1)
@@ -16,6 +17,23 @@ struct RGB: Sendable, Hashable {
             channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
         }
         return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+    }
+}
+
+struct TranslucentRGB: Sendable, Hashable {
+    var base: RGB
+    var opacity: Double
+
+    var color: Color {
+        Color(.sRGB, red: base.red, green: base.green, blue: base.blue, opacity: opacity)
+    }
+
+    func composited(over background: RGB) -> RGB {
+        RGB(
+            red: base.red * opacity + background.red * (1 - opacity),
+            green: base.green * opacity + background.green * (1 - opacity),
+            blue: base.blue * opacity + background.blue * (1 - opacity)
+        )
     }
 }
 
@@ -82,9 +100,11 @@ public struct Theme: Sendable {
         return [stops.top.color, stops.bottom.color]
     }
 
-    public var cardFill: Color { .white.opacity(0.17) }
+    var cardFillColor: TranslucentRGB { TranslucentRGB(base: .black, opacity: 0.22) }
 
-    public var cardStroke: Color { .white.opacity(0.28) }
+    public var cardFill: Color { cardFillColor.color }
+
+    public var cardStroke: Color { TranslucentRGB(base: .white, opacity: 0.2).color }
 }
 
 struct GradientStops: Sendable, Hashable {

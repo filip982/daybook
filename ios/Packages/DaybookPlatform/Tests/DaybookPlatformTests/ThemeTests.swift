@@ -41,4 +41,23 @@ import Testing
         #expect(contrastRatio(stops.top, .white) >= 4.5)
         #expect(contrastRatio(stops.bottom, .white) >= 4.5)
     }
+
+    @Test(arguments: Theme.Sky.allCases)
+    func whiteTextOnACardStaysReadableOverEverySky(sky: Theme.Sky) {
+        let stops = theme.gradientStops(sky)
+        for background in [stops.top, stops.bottom] {
+            let card = theme.cardFillColor.composited(over: background)
+            #expect(contrastRatio(card, .white) >= 4.5)
+        }
+    }
+
+    @Test func theCardDarkensTheSkyRatherThanLighteningIt() {
+        for sky in Theme.Sky.allCases {
+            let stops = theme.gradientStops(sky)
+            for background in [stops.top, stops.bottom] {
+                let card = theme.cardFillColor.composited(over: background)
+                #expect(card.relativeLuminance <= background.relativeLuminance)
+            }
+        }
+    }
 }
