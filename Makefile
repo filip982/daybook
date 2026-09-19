@@ -17,3 +17,8 @@ ios-build: project
 
 ios-verify-bundle:
 	scripts/verify-bundle.sh
+
+.PHONY: lint
+lint:
+	scripts/test-lint-layers.sh
+	scripts/lint-layers.sh
