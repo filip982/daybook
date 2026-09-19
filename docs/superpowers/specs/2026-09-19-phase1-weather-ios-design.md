@@ -38,7 +38,7 @@ Phase 1 is done when:
 | 16 | Release secrets live in the owner's password manager and a protected GitHub environment | Public repo; nothing secret ever enters git |
 | 17 | TestFlight only for now | Open-Meteo's free tier is non-commercial; a store release needs a licence decision |
 | 18 | iOS 18 minimum, Xcode 26.5 / Swift 6.3.2 pinned, Swift 6 language mode | Owner decision; two majors behind iOS 27 |
-| 19 | Bundle identifier `com.blue-studio.daybook` | Owner decision |
+| 19 | Bundle identifier `com.replicantstudio.daybook` | Owner decision |
 | 20 | Hourly strip plus a 10-day forecast | Owner decision; the README scope line is updated to match |
 | 21 | Rule-based morning summary line per location | Owner decision; the cheapest detail that serves "morning weather for the family" |
 
@@ -145,7 +145,7 @@ WeatherTab appears
 
 `locationNotAsked`, `locationDenied`, `loading`, `loaded(fresh)`, `loaded(stale, offline)`, `failed(WeatherError)` with no cache, `refreshing`, and `emptySavedList`. Approximate location uses the same states and never claims a precise place.
 
-Errors map to states in the view model. `OSLog` with subsystem `com.blue-studio.daybook` and categories `weather`, `location`; signposts wrap fetch and cache reads.
+Errors map to states in the view model. `OSLog` with subsystem `com.replicantstudio.daybook` and categories `weather`, `location`; signposts wrap fetch and cache reads.
 
 ## 8. Privacy
 

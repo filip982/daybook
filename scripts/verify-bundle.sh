@@ -8,7 +8,7 @@ fail() { echo "verify-bundle: $1" >&2; exit 1; }
 
 [ -d "$app" ] || fail "app not found at $app"
 
-[ "$(plutil -extract CFBundleIdentifier raw "$plist")" = "com.blue-studio.daybook" ] \
+[ "$(plutil -extract CFBundleIdentifier raw "$plist")" = "com.replicantstudio.daybook" ] \
   || fail "wrong bundle identifier"
 [ "$(plutil -extract NSLocationWhenInUseUsageDescription raw "$plist")" = "Shows the weather where you are right now." ] \
   || fail "wrong or missing location usage string"

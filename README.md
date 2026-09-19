@@ -59,4 +59,4 @@ Folders appear when their first commit lands, not before.
 
 ## License
 
-MIT
+MIT © 2026 Replicant Studio
