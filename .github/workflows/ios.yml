@@ -45,6 +45,9 @@ jobs:
       - name: Lint
         run: make lint
 
+      - name: Test scripts
+        run: make scripts-test
+
       - name: Test packages
         run: make ios-test
 

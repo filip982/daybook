@@ -4,7 +4,7 @@ PACKAGES := ios/Packages
 .DEFAULT_GOAL := all
 
 .PHONY: all
-all: lint ios-test ios-verify-bundle
+all: lint scripts-test ios-test ios-verify-bundle
 
 .PHONY: ios-test
 ios-test:
@@ -35,3 +35,7 @@ ios-verify-bundle: ios-build
 lint:
 	scripts/test-lint-layers.sh
 	scripts/lint-layers.sh
+
+.PHONY: scripts-test
+scripts-test:
+	scripts/test-release-info.sh
