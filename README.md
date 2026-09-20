@@ -32,7 +32,7 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS, step 4 of 6. A store serves the last forecast from a file cache, refreshes from Open-Meteo, survives corrupt files and no network, and keeps saved cities in Application Support. The screen gets live data and location in step 5.
+Phase 1, iOS, steps 1 to 4 and 6 of 6. A store serves the last forecast from a file cache, refreshes from Open-Meteo, survives corrupt files and no network, and keeps saved cities in Application Support. The screen gets live data and location in step 5. Releases go to TestFlight from a tag; the first build still shows the placeholder screen.
 <img src="docs/images/weather-step2.png" alt="Weather tab, step 2" width="300">
 
 ## Build log
@@ -44,6 +44,15 @@ Phase 1, iOS, step 4 of 6. A store serves the last forecast from a file cache, r
 | 2026-09-19 | iOS step 2: weather model, day summary rules, theme, formatter, WeatherView in all states, snapshot tests. |
 | 2026-09-19 | iOS step 3: Open-Meteo provider, geocoding, zone-correct mapping, per-test URL stubs, nightly live schema check. |
 | 2026-09-19 | iOS step 4: forecast file cache, saved locations file, LiveWeatherStore, contract tests over a stubbed network, debug fixture provider. |
+| 2026-09-20 | iOS step 6: app icon, version and build number from the tag, unsigned archive, cloud-signed upload to TestFlight behind an approval gate. |
+
+## Releasing (iOS)
+
+1. Merge `develop` into `main`.
+2. Tag the commit on `main`, for example `git tag v0.1.0 && git push origin v0.1.0`.
+3. Approve the `release` job in GitHub Actions.
+
+The version comes from the tag and the build number is the commit count at the tag, for example `0.1.0 (142)`. The archive is built unsigned and signed once, in the cloud, at upload. The App Store Connect API key lives only in the protected `testflight` environment.
 
 ## Layout
 

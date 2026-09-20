@@ -48,7 +48,7 @@ Phase 1 is done when:
 daybook/
 ├─ .github/workflows/ios.yml          test on PR and main, release on v* tags
 ├─ .github/workflows/ios-live.yml     nightly live schema check
-├─ Makefile                           project, ios-test, ios-snapshots-record, ios-archive, ios-upload, lint-layers
+├─ Makefile                           project, ios-test, ios-snapshots-record, ios-archive, ios-verify-archive, ios-upload, scripts-test, lint
 ├─ docs/superpowers/specs/            this document
 └─ ios/
    ├─ project.yml                     XcodeGen; the .xcodeproj is generated, not committed
@@ -186,10 +186,10 @@ Part of "done" for every screen:
 ## 11. CI/CD
 
 - `ios.yml`: runs on pull requests and on pushes to `develop` and `main`, path-filtered to `ios/**`, `scripts/**`, the Makefile and the workflow. `test` job on `macos-26` with an explicitly selected Xcode 26.5 runs `make ios-test`. Top-level `permissions: contents: read`. Third-party actions pinned by commit SHA. No `pull_request_target`.
-- `release` job: only on `v*` tags, `needs: test`, environment `testflight` (deployment rule `v*`, owner as required reviewer). Full checkout, fails if the tag is not on `main`. Writes the API key to `$RUNNER_TEMP`, runs `make ios-archive` and `make ios-upload` with the key flags on both `xcodebuild` calls, deletes the key in an `always()` step. Signing is automatic and cloud-managed; no certificates or profiles are stored.
+- `release` job: only on `v*` tags, `needs: test`, environment `testflight` (deployment rule `v*`, owner as required reviewer). Full checkout, fails if the tag is not on `main`. Runs `make ios-archive` unsigned and checks the archive with `make ios-verify-archive`, then writes the API key to `$RUNNER_TEMP`, runs `make ios-upload` with the key flags on the `-exportArchive` call only, and deletes the key in an `always()` step. The archive is unsigned because a signed archive on a fresh runner creates a new Apple Development certificate on every run until the team's certificate cap is reached; the app has no entitlements, so export does all signing. If a capability is added later, revisit this. Signing is automatic and cloud-managed; no certificates or profiles are stored. The workflow sets `defaults.run.shell: bash` so every step runs with pipefail, and the version step fails the job when `scripts/release-info.sh` refuses the tag.
 - Version: marketing version from the tag, build number = commit count on `main`, for example `0.1.0 (142)`.
 - `ios-live.yml`: nightly schedule, runs only tests tagged `live`. A failure shows on that workflow and never blocks PRs.
-- Owner's manual steps, once: register the bundle ID, create the app record, create an App Store Connect API key with the Admin role, run three `gh secret set` commands for the environment, approve release jobs.
+- Owner's manual steps, once: register the bundle ID, create the app record, create an App Store Connect API key with the Admin role, run three `gh secret set` commands for the environment (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_PRIVATE_KEY`), approve release jobs.
 
 ## 12. Build order
 
