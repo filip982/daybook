@@ -371,6 +371,14 @@ concurrency:
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 ```
 
+- [ ] **Step 2b: Set an explicit default shell.** Add directly after the `permissions:` block and before `concurrency:`:
+
+```yaml
+defaults:
+  run:
+    shell: bash
+```
+
 - [ ] **Step 3: Add the job** after the `test` job, using the same checkout SHA the `test` job uses:
 
 ```yaml
@@ -383,6 +391,7 @@ concurrency:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Full history: the build number is a commit count and the tag must be an ancestor of origin/main.
           fetch-depth: 0
 
       - name: Select Xcode 26.5
@@ -400,10 +409,12 @@ concurrency:
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          scripts/release-info.sh "$TAG" origin/main | tee -a "$GITHUB_ENV"
+          info="$(scripts/release-info.sh "$TAG" origin/main)"
+          echo "$info"
+          echo "$info" >> "$GITHUB_ENV"
 
       - name: Archive
-        run: make ios-archive ios-verify-archive VERSION="$VERSION" BUILD="$BUILD"
+        run: make ios-archive ios-verify-archive VERSION="${VERSION:?}" BUILD="${BUILD:?}"
 
       - name: Upload to TestFlight
         env:
@@ -420,7 +431,7 @@ concurrency:
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
 ```
 
-`set -o pipefail` is on by default in GitHub's bash shell, so a failing `release-info.sh` fails the step even through `tee`.
+GitHub runs a step with an unspecified shell as `bash -e {0}`, without pipefail, so the workflow sets `defaults.run.shell: bash` and the version step avoids a pipe; a refused tag must stop the job.
 
 - [ ] **Step 4: Validate.** Run `ruby -ryaml -e 'y = YAML.load_file(".github/workflows/ios.yml"); abort("release job missing") unless y["jobs"]["release"]["environment"] == "testflight"; abort("tag trigger missing") unless y[true]["push"]["tags"] == ["v*"]; puts "ok"'`. Expected: `ok`. (Ruby's YAML reads the key `on` as boolean `true`.) Then run `grep -n '\${{' .github/workflows/ios.yml` and confirm that no match is inside a `run:` block.
 
