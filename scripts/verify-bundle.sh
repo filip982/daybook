@@ -22,4 +22,13 @@ fail() { echo "verify-bundle: $1" >&2; exit 1; }
 [ -f "$app/PrivacyInfo.xcprivacy" ] || fail "privacy manifest missing from bundle"
 plutil -lint "$app/PrivacyInfo.xcprivacy" >/dev/null || fail "privacy manifest is not a valid plist"
 
+if [ -n "${EXPECT_VERSION:-}" ]; then
+  [ "$(plutil -extract CFBundleShortVersionString raw "$plist")" = "$EXPECT_VERSION" ] \
+    || fail "marketing version is not $EXPECT_VERSION"
+fi
+if [ -n "${EXPECT_BUILD:-}" ]; then
+  [ "$(plutil -extract CFBundleVersion raw "$plist")" = "$EXPECT_BUILD" ] \
+    || fail "build number is not $EXPECT_BUILD"
+fi
+
 echo "verify-bundle: ok"

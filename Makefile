@@ -31,6 +31,21 @@ ios-build: project
 ios-verify-bundle: ios-build
 	scripts/verify-bundle.sh $(DERIVED)/Build/Products/Debug-iphonesimulator/Daybook.app
 
+ARCHIVE := ios/build/Daybook.xcarchive
+VERSION ?= 0.0.0
+BUILD ?= 1
+
+.PHONY: ios-archive ios-verify-archive ios-upload
+ios-archive: project
+	xcodebuild archive -project ios/Daybook.xcodeproj -scheme Daybook -configuration Release -destination 'generic/platform=iOS' -archivePath $(ARCHIVE) -derivedDataPath $(DERIVED) -quiet MARKETING_VERSION=$(VERSION) CURRENT_PROJECT_VERSION=$(BUILD) CODE_SIGNING_ALLOWED=NO
+
+ios-verify-archive:
+	EXPECT_VERSION=$(VERSION) EXPECT_BUILD=$(BUILD) scripts/verify-bundle.sh $(ARCHIVE)/Products/Applications/Daybook.app
+
+ios-upload:
+	@test -n "$(ASC_KEY_PATH)" -a -n "$(ASC_KEY_ID)" -a -n "$(ASC_ISSUER_ID)" || { echo "ios-upload: ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID are required" >&2; exit 1; }
+	@xcodebuild -exportArchive -archivePath $(ARCHIVE) -exportOptionsPlist ios/ExportOptions.plist -exportPath ios/build/export -allowProvisioningUpdates -authenticationKeyPath "$(ASC_KEY_PATH)" -authenticationKeyID "$(ASC_KEY_ID)" -authenticationKeyIssuerID "$(ASC_ISSUER_ID)"
+
 .PHONY: lint
 lint:
 	scripts/test-lint-layers.sh
