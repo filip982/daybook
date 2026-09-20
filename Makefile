@@ -54,3 +54,4 @@ lint:
 .PHONY: scripts-test
 scripts-test:
 	scripts/test-release-info.sh
+	scripts/test-tag-release.sh

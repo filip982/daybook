@@ -49,7 +49,7 @@ Phase 1, iOS, steps 1 to 4 and 6 of 6. A store serves the last forecast from a f
 ## Releasing (iOS)
 
 1. Merge `develop` into `main`.
-2. Tag the commit on `main`, for example `git tag v0.1.0 && git push origin v0.1.0`.
+2. Run `scripts/tag-release.sh 0.2.0`. It tags the tip of `main` with a message that lists every commit since the previous tag, and prints the push command.
 3. Approve the `release` job in GitHub Actions.
 
 The version comes from the tag and the build number is the commit count at the tag, for example `0.1.0 (142)`. The archive is built unsigned and signed once, in the cloud, at upload. The App Store Connect API key lives only in the protected `testflight` environment.
