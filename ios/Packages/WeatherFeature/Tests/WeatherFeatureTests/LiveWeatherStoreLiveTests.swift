@@ -70,7 +70,24 @@ import Testing
 
         #expect(forecast.fetchedAt == explicitNow)
     }
+
+    @Test func theFixtureLaunchArgumentYieldsTheFixtureLocation() {
+        let location = LiveWeatherStore.location(
+            arguments: ["app", LiveWeatherStore.fixtureLaunchArgument],
+            fallback: FakeLocation(authorization: .notDetermined, current: [.failure(.unavailable)])
+        )
+
+        #expect(location is FixtureLocation)
+    }
     #endif
+
+    @Test func withoutTheFixtureArgumentTheFallbackLocationIsReturned() {
+        let fallback = FakeLocation(authorization: .notDetermined, current: [.failure(.unavailable)])
+
+        let location = LiveWeatherStore.location(arguments: ["app"], fallback: fallback)
+
+        #expect((location as? FakeLocation) === fallback)
+    }
 
     @Test func withoutTheFixtureArgumentTheClockIsTheRealClock() {
         let reading = LiveWeatherStore.clock(arguments: ["app"])()

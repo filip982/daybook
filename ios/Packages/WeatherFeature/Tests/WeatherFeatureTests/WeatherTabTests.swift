@@ -1,15 +1,26 @@
 import DaybookPlatform
 import SwiftUI
 import Testing
-import WeatherFeature
+import UIKit
+@testable import WeatherFeature
 
 @Suite @MainActor struct WeatherTabTests {
     @Test func publicEntryAcceptsAnyLocationProvider() {
-        _ = WeatherTab(location: StubLocation())
+        _ = WeatherTab(location: FakeLocation(authorization: .notDetermined, current: [.failure(.unavailable)]))
     }
-}
 
-private struct StubLocation: LocationProviding {
-    func authorization() async -> LocationAuthorization { .notDetermined }
-    func current() async throws(LocationError) -> LocatedPlace { throw .unavailable }
+    @Test func viewModelEntryHostsWithoutCrashing() {
+        let viewModel = WeatherViewModel(
+            store: FakeWeatherStore(cached: [:], saved: []),
+            location: FakeLocation(authorization: .notDetermined, current: [.failure(.unavailable)]),
+            now: TestClock(Date(timeIntervalSince1970: 0)).closure,
+            locale: Locale(identifier: "en_AT")
+        )
+        let controller = UIHostingController(rootView: WeatherTab(viewModel: viewModel))
+
+        controller.loadViewIfNeeded()
+        controller.view.layoutIfNeeded()
+
+        #expect(controller.view != nil)
+    }
 }

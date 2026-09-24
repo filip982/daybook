@@ -1,3 +1,4 @@
+import DaybookPlatform
 import Foundation
 
 extension LiveWeatherStore {
@@ -40,8 +41,30 @@ extension LiveWeatherStore {
         return LiveWeatherStore(provider: provider, cache: cache, savedLocations: savedLocations)
     }
 
+    static func location(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        fallback: any LocationProviding
+    ) -> any LocationProviding {
+        #if DEBUG
+        if arguments.contains(fixtureLaunchArgument) {
+            return FixtureLocation()
+        }
+        #endif
+        return fallback
+    }
+
     static func languageCode(for locale: Locale) -> String {
         guard let identifier = locale.language.languageCode?.identifier else { return "en" }
         return String(identifier.prefix(2))
     }
 }
+
+#if DEBUG
+struct FixtureLocation: LocationProviding {
+    func authorization() async -> LocationAuthorization { .authorized }
+
+    func current() async throws(LocationError) -> LocatedPlace {
+        LocatedPlace(coordinate: Coordinate(latitude: 48.2082, longitude: 16.3738), name: "Vienna")
+    }
+}
+#endif

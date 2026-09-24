@@ -1,26 +1,42 @@
 import DaybookPlatform
 import SwiftUI
+import UIKit
 
 public struct WeatherTab: View {
-    private let location: any LocationProviding
+    @Environment(\.openURL) private var openURL
+    @State private var viewModel: WeatherViewModel
 
     public init(location: any LocationProviding) {
-        self.location = location
+        let clock = LiveWeatherStore.clock()
+        let store = LiveWeatherStore.live(now: clock)
+        self.init(viewModel: WeatherViewModel(
+            store: store,
+            location: LiveWeatherStore.location(fallback: location),
+            now: clock,
+            locale: .autoupdatingCurrent
+        ))
+    }
+
+    init(viewModel: WeatherViewModel) {
+        _viewModel = State(initialValue: viewModel)
     }
 
     public var body: some View {
-        #if DEBUG
         WeatherView(
-            state: .loaded(.fixtureVienna, placeName: "Vienna", isOffline: false),
-            now: Forecast.fixtureNow,
-            locale: .autoupdatingCurrent
+            state: viewModel.state,
+            now: viewModel.currentDate,
+            locale: viewModel.locale,
+            onAllowLocation: { Task { await viewModel.allowLocation() } },
+            onRetry: { Task { await viewModel.retry() } },
+            onOpenSettings: {
+                guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                openURL(url)
+            },
+            onRefresh: { await viewModel.refresh() }
         )
-        #else
-        ContentUnavailableView(
-            "Weather",
-            systemImage: "cloud.sun",
-            description: Text("The forecast arrives in the next build step.")
-        )
-        #endif
+        .task { await viewModel.start() }
+        .onChange(of: viewModel.loadingAnnouncements) {
+            AccessibilityNotification.Announcement("Loading forecast").post()
+        }
     }
 }

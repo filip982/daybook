@@ -10,6 +10,7 @@ struct WeatherView: View {
     private let onAllowLocation: () -> Void
     private let onRetry: () -> Void
     private let onOpenSettings: () -> Void
+    private let onRefresh: () async -> Void
 
     init(
         state: WeatherScreenState,
@@ -17,7 +18,8 @@ struct WeatherView: View {
         locale: Locale,
         onAllowLocation: @escaping () -> Void = {},
         onRetry: @escaping () -> Void = {},
-        onOpenSettings: @escaping () -> Void = {}
+        onOpenSettings: @escaping () -> Void = {},
+        onRefresh: @escaping () async -> Void = {}
     ) {
         self.state = state
         self.now = now
@@ -25,6 +27,7 @@ struct WeatherView: View {
         self.onAllowLocation = onAllowLocation
         self.onRetry = onRetry
         self.onOpenSettings = onOpenSettings
+        self.onRefresh = onRefresh
     }
 
     var body: some View {
@@ -77,6 +80,7 @@ struct WeatherView: View {
             .padding(.horizontal, theme.spacing.medium)
             .padding(.bottom, theme.spacing.large)
         }
+        .refreshable { await onRefresh() }
     }
 
     private var attribution: some View {

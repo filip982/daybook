@@ -4,14 +4,11 @@ import WeatherFeature
 
 @main
 struct DaybookApp: App {
+    private let location = LocationService(now: { Date() })
+
     var body: some Scene {
         WindowGroup {
-            WeatherTab(location: PlaceholderLocation())
+            WeatherTab(location: location)
         }
     }
-}
-
-private struct PlaceholderLocation: LocationProviding {
-    func authorization() async -> LocationAuthorization { .notDetermined }
-    func current() async throws(LocationError) -> LocatedPlace { throw .unavailable }
 }

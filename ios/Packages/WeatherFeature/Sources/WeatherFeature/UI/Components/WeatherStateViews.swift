@@ -42,7 +42,6 @@ struct WeatherLoadingView: View {
         .controlSize(.large)
         .tint(.white)
         .padding(theme.spacing.large)
-        .onAppear { AccessibilityNotification.Announcement("Loading forecast").post() }
     }
 }
 
