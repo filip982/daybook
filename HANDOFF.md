@@ -6,9 +6,9 @@ Written 2026-09-22 for whoever continues this repo with no chat history. Everyth
 
 Daybook is a personal daily app built natively four times (SwiftUI, Kotlin/Compose, React Native, Flutter) over a shared Rust core, as a public showcase. Phase 1 is the Weather tab on iOS, shipped to TestFlight. The binding design is `docs/superpowers/specs/2026-09-19-phase1-weather-ios-design.md`; section 12 lists the build order.
 
-Phase 1 has six build steps. Steps 1, 2, 3, 4 and 6 are done. **Step 5 is the whole remaining work of Phase 1**: location, the view model, all screen states, the saved-cities list, and a UI smoke test. Phase 1b (Rust core) is on hold by the owner's decision; do not start it.
+All six build steps of Phase 1 are done. Phase 1b (Rust core) is on hold by the owner's decision; do not start it.
 
-The last session (2026-09-20) built step 6, the TestFlight release pipeline, and shipped the first build, `0.1.0 (48)`, which shows a placeholder screen. The app on TestFlight will only show real weather after step 5.
+The last session (2026-09-20) built step 6, the TestFlight release pipeline, and shipped the first build, `0.1.0 (48)`, which shows a placeholder screen. The next build shows real weather, from step 5.
 
 ## 2. What is done
 
@@ -55,34 +55,21 @@ Decisions that shape step 5, and why:
 
 Nothing is half-finished in the code. `develop` is clean and equal to `origin/develop` at `459dd57`. `main` is at `3e3abea`, tagged `v0.1.0`.
 
-Step 5 has **no plan yet**. Its carry-over notes are in `docs/superpowers/plans/2026-09-19-phase1-step5-notes.md`; read them before planning, they record review findings the plan must honour (one clock, serialised refresh, VoiceOver announcement moved to a state transition, `PlaceholderLocation` deleted, `LocationService` design, the list of states, the UI smoke test recipe).
-
 Known leftovers, none blocking:
 
-- `ios/App/DaybookApp.swift` still shows `WeatherTab(location: PlaceholderLocation())`; `WeatherTab` ignores its `location` parameter and shows a fixture in DEBUG and a placeholder in Release. Step 5 replaces both.
-- `WeatherError.notFound` is defined but never produced.
 - HTTP 429 maps to `.server`; no retry or backoff exists.
 - The app icon is a generated placeholder (blue gradient, sun, two lines); the generator script is in the step 6 plan, Task 1, not in the repo.
 - The `test` job re-runs on every tag (`needs: test`), about 15 minutes per release. Kept because the spec requires it.
 - The plan Artifact page on claude.ai from the planning session is stale; the repo is the source of truth.
+- This machine now has Xcode 26.6 at `/Applications/Xcode_26.6.app` and Xcode 27.0 at `/Applications/Xcode.app`; `xcode-select` points at CommandLineTools. Use `DEVELOPER_DIR=/Applications/Xcode_26.6.app`. CI still pins 26.5.
+- `WeatherError.notFound` is now produced for `LocationError.unavailable`; its copy "No forecast for this place" is a known wording gap.
+- `swift-snapshot-testing` does not draw the iOS 26 toolbar/search glass, so `locationsDark` shows no Done button and light locations snapshots show a faint Search placeholder; the smoke test asserts the Done button instead.
 
 ## 4. Next steps, in order
 
-1. Read `docs/superpowers/specs/2026-09-19-phase1-weather-ios-design.md` (sections 4, 5, 7, 8, 10, 12) and `docs/superpowers/plans/2026-09-19-phase1-step5-notes.md`.
-2. Write `docs/superpowers/plans/2026-09-22-phase1-step5-location-and-states.md` in the same format as the step 4 and step 6 plans (header, Global Constraints, File Structure, tasks with failing test first, exact code, one commit per task). Expected tasks, roughly in this order:
-   1. `LocationService` in `DaybookPlatform` (`LocationProviding` implementation over `CLLocationManager`, waiting queue with one in-flight task, 60 s reuse, `CLServiceSession` for when-in-use), plus a fake for tests.
-   2. `WeatherViewModel` (`@Observable`, `@MainActor`) over `any WeatherStore` and `any LocationProviding`, with the injected clock, serialised refresh, and all `WeatherScreenState` transitions including refreshing and stale-offline; the "Loading forecast" announcement fired from a state transition.
-   3. Wire `WeatherTab` to the view model (`LiveWeatherStore.live(...)` and `LiveWeatherStore.clock(arguments:)` share one clock); delete `PlaceholderLocation` and the fixture branch; keep `WeatherTab` the only public type; make the view model injectable so a second tab could share it later.
-   4. `LocationsView`: current location first, saved cities with local time and summary line, search via `searchPlaces`, delete and reorder as VoiceOver custom actions; empty-list state.
-   5. Pull to refresh and the offline/stale note ("updated … ago").
-   6. New snapshot tests for the added states (record with `make ios-snapshots-record`, commit the PNGs deliberately).
-   7. XCUITest smoke test: launch with `-daybookFixtures`, `xcrun simctl privacy booted grant location com.replicantstudio.daybook` before launch, `performAccessibilityAudit()` with documented exclusions; add a `make ios-ui-test` target and a CI step.
-   8. README status, build log row, replace `docs/images/weather-step2.png` with a step 5 screenshot.
-3. Execute the plan with the superpowers subagent-driven-development skill (fresh implementer per task, reviewer per task, final whole-step review). Implementers on Opus or Sonnet, reviews on Sonnet for small diffs and Opus for concurrency and the location service. Every task is one commit on `develop`; push `develop` after the step, not after each task.
-4. Run `make` locally before pushing; watch the CI run with `gh run watch`.
-5. Run the app on a real iPhone once for the permission flow (needs the owner's device; automatic signing with team `KTS29DB5CZ` is already in `project.yml`).
-6. Release: `git checkout main && git merge --ff-only develop && git push origin main`, then `scripts/tag-release.sh 0.2.0`, push the tag it prints, and the owner approves the `release` job in Actions. The owner does the `main` push and the tag unless they say otherwise for that release.
-7. Update `docs/superpowers/plans/2026-09-19-phase1-step5-notes.md` or delete it once the plan supersedes it.
+1. Push `develop` and watch CI.
+2. Run on a real iPhone for the permission flow.
+3. Release `0.2.0` with `scripts/tag-release.sh`.
 
 ## 5. Open questions, gotchas, failed attempts
 
@@ -114,9 +101,10 @@ Tried and dropped:
 
 ## 6. Commands and environment
 
-Requirements: macOS with Xcode 26.5 selected (`sudo xcode-select -s /Applications/Xcode.app`), `brew install xcodegen` (2.45.4), `gh` authenticated for `filip982/daybook`, simulator "iPhone 17" with iOS 26.5.
+Requirements: macOS with `DEVELOPER_DIR=/Applications/Xcode_26.6.app` set for every xcodebuild/make/xcrun command (CI still pins 26.5; `xcode-select` on this machine points at CommandLineTools), `brew install xcodegen` (2.45.4), `gh` authenticated for `filip982/daybook`, simulator "iPhone 17" with iOS 26.5.
 
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode_26.6.app
 make                       # lint + script tests + package tests + app build + bundle check (default goal)
 make lint                  # layer rule and its self-test
 make scripts-test          # release-info.sh and tag-release.sh in throwaway repos

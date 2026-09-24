@@ -32,8 +32,8 @@ FastAPI, Postgres + pgvector, Redis, AWS. Arrives with phase 2; phase 1 is clien
 
 ## Status
 
-Phase 1, iOS, steps 1 to 4 and 6 of 6. A store serves the last forecast from a file cache, refreshes from Open-Meteo, survives corrupt files and no network, and keeps saved cities in Application Support. The screen gets live data and location in step 5. Releases go to TestFlight from a tag; the first build still shows the placeholder screen.
-<img src="docs/images/weather-step2.png" alt="Weather tab, step 2" width="300">
+Phase 1, iOS, complete: all 6 steps. The Weather tab shows the forecast where you are, keeps working offline from a file cache with an "updated … ago" note, and lets you search, save and reorder cities. Releases go to TestFlight from a tag.
+<img src="docs/images/weather-step5.png" alt="Weather tab, step 5" width="300">
 
 ## Build log
 
@@ -45,6 +45,7 @@ Phase 1, iOS, steps 1 to 4 and 6 of 6. A store serves the last forecast from a f
 | 2026-09-19 | iOS step 3: Open-Meteo provider, geocoding, zone-correct mapping, per-test URL stubs, nightly live schema check. |
 | 2026-09-19 | iOS step 4: forecast file cache, saved locations file, LiveWeatherStore, contract tests over a stubbed network, debug fixture provider. |
 | 2026-09-20 | iOS step 6: app icon, version and build number from the tag, unsigned archive, cloud-signed upload to TestFlight behind an approval gate. |
+| 2026-09-24 | iOS step 5: LocationService, WeatherViewModel with serialised refresh, saved cities and search, pull to refresh, offline note, UI smoke test with accessibility audit. |
 
 ## Releasing (iOS)
 
