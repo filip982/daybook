@@ -9,19 +9,22 @@ struct WeatherHeader: View {
     let forecast: Forecast
     let placeName: String
     let isOffline: Bool
+    let isCurrentLocation: Bool
     let formatter: WeatherFormatter
     let now: Date
 
     var body: some View {
         VStack(spacing: theme.spacing.small / 2) {
-            Label {
-                Text("MY LOCATION")
-            } icon: {
-                Image(systemName: "location.fill")
-                    .font(.system(size: locationIconSize))
+            if isCurrentLocation {
+                Label {
+                    Text("MY LOCATION")
+                } icon: {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: locationIconSize))
+                }
+                .font(.caption.weight(.semibold))
+                .textCase(.uppercase)
             }
-            .font(.caption.weight(.semibold))
-            .textCase(.uppercase)
 
             Text(placeName)
                 .font(.largeTitle)

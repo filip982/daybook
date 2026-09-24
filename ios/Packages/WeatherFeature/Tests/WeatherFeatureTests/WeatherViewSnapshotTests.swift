@@ -51,6 +51,60 @@ struct WeatherViewSnapshotTests {
         assertSnapshot(of: screen(.locationDenied), as: strategy())
     }
 
+    @Test func locationsWithItems() async {
+        let viewModel = await locationsViewModel(
+            cached: [SavedLocation.fixtures[0].coordinate: .fixtureLisbon],
+            saved: SavedLocation.fixtures
+        )
+
+        assertSnapshot(of: locations(viewModel), as: strategy())
+    }
+
+    @Test func locationsEmpty() async {
+        let viewModel = await locationsViewModel(cached: [:], saved: [])
+
+        assertSnapshot(of: locations(viewModel), as: strategy())
+    }
+
+    @Test func locationsSearchResults() async {
+        let oslo = SavedLocation.fixtures[1]
+        let viewModel = await locationsViewModel(cached: [:], saved: [], searchResults: [oslo])
+        viewModel.searchQuery = "o"
+        await viewModel.search("o")
+
+        assertSnapshot(of: locations(viewModel), as: strategy())
+    }
+
+    private func locationsViewModel(
+        cached: [Coordinate: Forecast],
+        saved: [SavedLocation],
+        searchResults: [SavedLocation]? = nil
+    ) async -> WeatherViewModel {
+        let vienna = LocatedPlace(coordinate: Coordinate(latitude: 48.2082, longitude: 16.3738), name: "Vienna")
+        var cached = cached
+        cached[vienna.coordinate] = .fixtureVienna
+        let store = FakeWeatherStore(cached: cached, saved: saved)
+        if let searchResults {
+            await store.enqueueSearch(.success(searchResults))
+        }
+        let viewModel = WeatherViewModel(
+            store: store,
+            location: FakeLocation(authorization: .authorized, current: [.success(vienna)]),
+            now: TestClock(Self.now).closure,
+            locale: Self.locale
+        )
+        await viewModel.start()
+        await viewModel.loadSavedLocations()
+        return viewModel
+    }
+
+    private func locations(_ viewModel: WeatherViewModel) -> some View {
+        LocationsView(viewModel: viewModel, onDone: {})
+            .environment(\.theme, .standard)
+            .environment(\.timeZone, TimeZone(identifier: "Europe/Vienna")!)
+            .transaction { $0.animation = nil }
+    }
+
     private func screen(_ state: WeatherScreenState) -> some View {
         WeatherView(state: state, now: Self.now, locale: Self.locale)
             .environment(\.theme, .standard)
