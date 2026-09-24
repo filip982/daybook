@@ -31,6 +31,7 @@ final class DaybookSmokeTests: XCTestCase {
         XCTAssertTrue(locationsButton.waitForExistence(timeout: 30))
         locationsButton.tap()
         XCTAssertTrue(app.descendants(matching: .any)["locations.currentLocation"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["locations.doneButton"].isHittable)
 
         try app.performAccessibilityAudit { issue in
             // System toolbar button: it grows with Dynamic Type up to the bar's cap and offers the Large Content Viewer.
