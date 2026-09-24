@@ -17,11 +17,11 @@ jobs:
         with:
           ref: develop
 
-      - name: Select Xcode 26.5
+      - name: Select Xcode 26.6
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.5.app
+          sudo xcode-select -s /Applications/Xcode_26.6.app
           xcodebuild -version
-          xcodebuild -version | grep -q "Xcode 26.5"
+          xcodebuild -version | grep "Xcode 26.6"
 
       - name: Live schema check
         run: make ios-test-live

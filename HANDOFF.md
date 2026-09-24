@@ -61,7 +61,7 @@ Known leftovers, none blocking:
 - The app icon is a generated placeholder (blue gradient, sun, two lines); the generator script is in the step 6 plan, Task 1, not in the repo.
 - The `test` job re-runs on every tag (`needs: test`), about 15 minutes per release. Kept because the spec requires it.
 - The plan Artifact page on claude.ai from the planning session is stale; the repo is the source of truth.
-- This machine now has Xcode 26.6 at `/Applications/Xcode_26.6.app` and Xcode 27.0 at `/Applications/Xcode.app`; `xcode-select` points at CommandLineTools. Use `DEVELOPER_DIR=/Applications/Xcode_26.6.app`. CI still pins 26.5.
+- This machine now has Xcode 26.6 at `/Applications/Xcode_26.6.app` and Xcode 27.0 at `/Applications/Xcode.app`; `xcode-select` points at CommandLineTools. Use `DEVELOPER_DIR=/Applications/Xcode_26.6.app`. CI pins 26.6 too (since 2026-09-24: with 26.5 selected the `macos-26` image showed no simulators at all; `scripts/ensure-simulator.sh` now lists and, if needed, creates the iPhone 17 / iOS 26.5 device before tests).
 - `WeatherError.notFound` is now produced for `LocationError.unavailable`; its copy "No forecast for this place" is a known wording gap.
 - `swift-snapshot-testing` does not draw the iOS 26 toolbar/search glass, so `locationsDark` shows no Done button and light locations snapshots show a faint Search placeholder; the smoke test asserts the Done button instead.
 
@@ -84,7 +84,7 @@ Gotchas that cost time:
 - GitHub Actions runs `run:` steps without an explicit shell as `bash -e`, **without pipefail**. `ios.yml` sets `defaults.run.shell: bash` for that reason. A plan and a reviewer both asserted the opposite; check tool-behaviour claims against docs.
 - With pipefail on, `xcodebuild -version | grep -q` fails: `grep -q` closes the pipe early and xcodebuild aborts. Use plain `grep`.
 - `actions/checkout` with `fetch-depth: 0` does fetch `refs/remotes/origin/*`; a reviewer claimed `origin/main` would be missing. It is present, and `release-info.sh` relies on it.
-- Xcode on this machine is 26.5 (17F42) at `/Applications/Xcode.app`; an `Xcode_27.app` is also installed. The spec once said 26.6 from a stale reading. Re-check `xcodebuild -version` before pinning anything.
+- Re-check `xcodebuild -version` and the runner image manifest (`images/macos/macos-26-Readme.md` in actions/runner-images) before pinning anything; both have changed under this project twice.
 - Swift Testing runs tests in parallel in one process: network stubs use a per-session key in an `X-Stub-Key` header and a lock-protected table (`Tests/.../Support/StubURLProtocol.swift`). Never add a static shared handler.
 - Wall-clock date parsing collapsed DST hours in step 3; the provider now requests `timeformat=unixtime`. Keep it.
 - Snapshot tests are recorded only when `SNAPSHOT_RECORD=1` (`make ios-snapshots-record`, passed as `TEST_RUNNER_SNAPSHOT_RECORD=1`); traits pin display scale, content size, legibility weight and contrast.

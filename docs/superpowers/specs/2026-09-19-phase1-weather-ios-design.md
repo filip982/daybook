@@ -37,7 +37,7 @@ Phase 1 is done when:
 | 15 | GitHub Actions only, Makefile for identical local and CI commands | Android, React Native and Rust join the same CI later; no fastlane, no Xcode Cloud |
 | 16 | Release secrets live in the owner's password manager and a protected GitHub environment | Public repo; nothing secret ever enters git |
 | 17 | TestFlight only for now | Open-Meteo's free tier is non-commercial; a store release needs a licence decision |
-| 18 | iOS 18 minimum, Xcode 26.5 / Swift 6.3.2 pinned, Swift 6 language mode | Owner decision; two majors behind iOS 27 |
+| 18 | iOS 18 minimum, Xcode 26.6 / Swift 6.3.2 pinned (26.5 until 2026-09-24, when the CI image lost its simulators under 26.5), Swift 6 language mode | Owner decision; two majors behind iOS 27 |
 | 19 | Bundle identifier `com.replicantstudio.daybook` | Owner decision |
 | 20 | Hourly strip plus a 10-day forecast | Owner decision; the README scope line is updated to match |
 | 21 | Rule-based morning summary line per location | Owner decision; the cheapest detail that serves "morning weather for the family" |
@@ -185,7 +185,7 @@ Part of "done" for every screen:
 
 ## 11. CI/CD
 
-- `ios.yml`: runs on pull requests and on pushes to `develop` and `main`, path-filtered to `ios/**`, `scripts/**`, the Makefile and the workflow. `test` job on `macos-26` with an explicitly selected Xcode 26.5 runs `make ios-test`. Top-level `permissions: contents: read`. Third-party actions pinned by commit SHA. No `pull_request_target`.
+- `ios.yml`: runs on pull requests and on pushes to `develop` and `main`, path-filtered to `ios/**`, `scripts/**`, the Makefile and the workflow. `test` job on `macos-26` with an explicitly selected Xcode 26.6 runs `scripts/ensure-simulator.sh`, then `make ios-test`. Top-level `permissions: contents: read`. Third-party actions pinned by commit SHA. No `pull_request_target`.
 - `release` job: only on `v*` tags, `needs: test`, environment `testflight` (deployment rule `v*`, owner as required reviewer). Full checkout, fails if the tag is not on `main`. Runs `make ios-archive` unsigned and checks the archive with `make ios-verify-archive`, then writes the API key to `$RUNNER_TEMP`, runs `make ios-upload` with the key flags on the `-exportArchive` call only, and deletes the key in an `always()` step. The archive is unsigned because a signed archive on a fresh runner creates a new Apple Development certificate on every run until the team's certificate cap is reached; the app has no entitlements, so export does all signing. If a capability is added later, revisit this. Signing is automatic and cloud-managed; no certificates or profiles are stored. The workflow sets `defaults.run.shell: bash` so every step runs with pipefail, and the version step fails the job when `scripts/release-info.sh` refuses the tag.
 - Version: marketing version from the tag, build number = commit count on `main`, for example `0.1.0 (142)`.
 - `ios-live.yml`: nightly schedule, runs only tests tagged `live`. A failure shows on that workflow and never blocks PRs.
