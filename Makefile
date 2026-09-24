@@ -33,7 +33,8 @@ ios-verify-bundle: ios-build
 
 .PHONY: ios-ui-test
 ios-ui-test: project
-	xcodebuild test -project ios/Daybook.xcodeproj -scheme Daybook -only-testing:DaybookUITests -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) -quiet CODE_SIGNING_ALLOWED=NO
+	rm -rf ios/build/UITests.xcresult
+	xcodebuild test -project ios/Daybook.xcodeproj -scheme Daybook -only-testing:DaybookUITests -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) -resultBundlePath ios/build/UITests.xcresult -quiet CODE_SIGNING_ALLOWED=NO
 
 ARCHIVE := ios/build/Daybook.xcarchive
 VERSION ?= 0.0.0
