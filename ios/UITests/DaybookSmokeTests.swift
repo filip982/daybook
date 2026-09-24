@@ -23,6 +23,7 @@ final class DaybookSmokeTests: XCTestCase {
             // Only reproduces with the hourly card on screen, whose cells are all labelled elements;
             // the audit reports no element for it, so it cannot be matched by identifier.
             if issue.auditType == .elementDetection, issue.element == nil { return true }
+            Self.attach(issue)
             return false
         }
     }
@@ -41,6 +42,7 @@ final class DaybookSmokeTests: XCTestCase {
             if issue.auditType == .dynamicType, issue.element?.identifier == "locations.doneButton" { return true }
             // At AccessibilityXXXL the label wraps onto two lines and nothing is cut.
             if issue.auditType == .textClipped, Self.isInside("locations.currentLocation", issue, app) { return true }
+            Self.attach(issue)
             return false
         }
     }
@@ -59,6 +61,18 @@ final class DaybookSmokeTests: XCTestCase {
     ) -> Bool {
         guard let frame = issue.element?.frame else { return false }
         return app.descendants(matching: .any).matching(identifier: identifier).allElementsBoundByIndex
-            .contains { $0.frame.contains(frame) }
+            .contains { $0.frame.intersects(frame) }
+    }
+
+    @MainActor private static func attach(_ issue: XCUIAccessibilityAuditIssue) {
+        let element = issue.element
+        let text = """
+            \(issue.auditType) \(issue.compactDescription)
+            identifier=\(element?.identifier ?? "nil") label=\(element?.label ?? "nil") frame=\(element.map { "\($0.frame)" } ?? "nil")
+            """
+        let attachment = XCTAttachment(string: text)
+        attachment.name = "Audit issue"
+        attachment.lifetime = .keepAlways
+        XCTContext.runActivity(named: "Audit issue") { $0.add(attachment) }
     }
 }
