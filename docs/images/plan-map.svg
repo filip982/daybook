@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="640" viewBox="0 0 680 640" role="img">
+<title>Daybook plan on three axes</title>
+<desc>Six product phases as rows across four client columns, the shared Rust core and backend below them, and the six build steps that every phase and client pair goes through.</desc>
+<style>
+text { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; }
+.th { font-size: 14px; font-weight: 500; fill: #2C2C2A; }
+.ts { font-size: 12px; fill: #5F5E5A; }
+.lane { fill: none; stroke: #B4B2A9; stroke-width: 0.5; stroke-dasharray: 4 4; }
+.box { fill: #FFFFFF; stroke: #B4B2A9; stroke-width: 0.5; }
+.gray rect { fill: #F1EFE8; stroke: #5F5E5A; stroke-width: 0.5; }
+.gray .th { fill: #444441; } .gray .ts { fill: #5F5E5A; }
+.purple rect { fill: #EEEDFE; stroke: #534AB7; stroke-width: 0.5; }
+.purple .th { fill: #3C3489; } .purple .ts { fill: #534AB7; }
+.teal rect { fill: #E1F5EE; stroke: #0F6E56; stroke-width: 0.5; }
+.teal .th { fill: #085041; } .teal .ts { fill: #0F6E56; }
+.coral rect { fill: #FAECE7; stroke: #993C1D; stroke-width: 0.5; }
+.coral .th { fill: #712B13; } .coral .ts { fill: #993C1D; }
+.arr { stroke: #888780; stroke-width: 1.5; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="640" fill="#FFFFFF"/>
+<rect class="lane" x="30" y="30" width="620" height="352" rx="8"/>
+<text class="ts" x="46" y="52">Product phases (rows) on clients (columns), built in this order</text>
+<g class="gray"><rect x="170" y="66" width="100" height="30" rx="4"/><text class="th" x="220" y="86" text-anchor="middle">iOS SwiftUI</text></g>
+<g class="gray"><rect x="290" y="66" width="100" height="30" rx="4"/><text class="th" x="340" y="86" text-anchor="middle">Android</text></g>
+<g class="gray"><rect x="410" y="66" width="100" height="30" rx="4"/><text class="th" x="460" y="86" text-anchor="middle">React Native</text></g>
+<g class="gray"><rect x="530" y="66" width="100" height="30" rx="4"/><text class="th" x="580" y="86" text-anchor="middle">Flutter</text></g>
+<g class="purple"><rect x="50" y="110" width="110" height="36" rx="4"/><text class="th" x="105" y="133" text-anchor="middle">1 Weather</text></g>
+<g class="teal"><rect x="170" y="110" width="100" height="36" rx="4"/><text class="th" x="220" y="126" text-anchor="middle">step 5 of 6</text><text class="ts" x="220" y="140" text-anchor="middle">0.1.0 on TestFlight</text></g>
+<rect class="box" x="290" y="110" width="100" height="36" rx="4"/><text class="ts" x="340" y="133" text-anchor="middle">next</text>
+<rect class="box" x="410" y="110" width="100" height="36" rx="4"/><text class="ts" x="460" y="133" text-anchor="middle">later</text>
+<rect class="box" x="530" y="110" width="100" height="36" rx="4"/><text class="ts" x="580" y="133" text-anchor="middle">if 3 land</text>
+<g class="purple"><rect x="50" y="156" width="110" height="36" rx="4"/><text class="th" x="105" y="179" text-anchor="middle">2 News</text></g>
+<rect class="box" x="170" y="156" width="460" height="36" rx="4"/><text class="ts" x="400" y="179" text-anchor="middle">public RSS, dedupe, freshness ranking; backend arrives here</text>
+<g class="purple"><rect x="50" y="202" width="110" height="36" rx="4"/><text class="th" x="105" y="225" text-anchor="middle">3 Notes</text></g>
+<rect class="box" x="170" y="202" width="460" height="36" rx="4"/><text class="ts" x="400" y="225" text-anchor="middle">offline first, sync queue, voice to note, AI last</text>
+<g class="purple"><rect x="50" y="248" width="110" height="36" rx="4"/><text class="th" x="105" y="271" text-anchor="middle">4 Health</text></g>
+<rect class="box" x="170" y="248" width="460" height="36" rx="4"/><text class="ts" x="400" y="271" text-anchor="middle">pedometer, HealthKit and Health Connect, widget</text>
+<g class="purple"><rect x="50" y="294" width="110" height="36" rx="4"/><text class="th" x="105" y="317" text-anchor="middle">5 Calendar</text></g>
+<rect class="box" x="170" y="294" width="460" height="36" rx="4"/><text class="ts" x="400" y="317" text-anchor="middle">shared family and client calendar, natural language scheduling</text>
+<g class="purple"><rect x="50" y="340" width="110" height="36" rx="4"/><text class="th" x="105" y="363" text-anchor="middle">6 Recommend</text></g>
+<rect class="box" x="170" y="340" width="460" height="36" rx="4"/><text class="ts" x="400" y="363" text-anchor="middle">same feed, personalised by topic weights, no follow graph</text>
+<rect class="lane" x="30" y="400" width="620" height="80" rx="8"/>
+<text class="ts" x="46" y="422">Shared, written once</text>
+<g class="coral"><rect x="50" y="434" width="290" height="36" rx="4"/><text class="th" x="195" y="450" text-anchor="middle">Rust core via UniFFI</text><text class="ts" x="195" y="464" text-anchor="middle">logic, store, providers; Phase 1b, on hold</text></g>
+<g class="coral"><rect x="350" y="434" width="280" height="36" rx="4"/><text class="th" x="490" y="450" text-anchor="middle">Backend</text><text class="ts" x="490" y="464" text-anchor="middle">FastAPI, Postgres, Redis, AWS; from Phase 2</text></g>
+<rect class="lane" x="30" y="498" width="620" height="112" rx="8"/>
+<text class="ts" x="46" y="520">How one phase lands on one client: six build steps, each a plan, commits per task, review, green CI</text>
+<g class="gray"><rect x="50" y="534" width="90" height="40" rx="4"/><text class="th" x="95" y="551" text-anchor="middle">1 Project</text><text class="ts" x="95" y="566" text-anchor="middle">and CI</text></g>
+<g class="gray"><rect x="148" y="534" width="90" height="40" rx="4"/><text class="th" x="193" y="551" text-anchor="middle">2 Screen</text><text class="ts" x="193" y="566" text-anchor="middle">from fixture</text></g>
+<g class="gray"><rect x="246" y="534" width="90" height="40" rx="4"/><text class="th" x="291" y="551" text-anchor="middle">3 Provider</text><text class="ts" x="291" y="566" text-anchor="middle">real API</text></g>
+<g class="gray"><rect x="344" y="534" width="90" height="40" rx="4"/><text class="th" x="389" y="551" text-anchor="middle">4 Store</text><text class="ts" x="389" y="566" text-anchor="middle">and cache</text></g>
+<g class="teal"><rect x="442" y="534" width="90" height="40" rx="4"/><text class="th" x="487" y="551" text-anchor="middle">5 Live data</text><text class="ts" x="487" y="566" text-anchor="middle">all states, UI test</text></g>
+<g class="gray"><rect x="540" y="534" width="90" height="40" rx="4"/><text class="th" x="585" y="551" text-anchor="middle">6 Release</text><text class="ts" x="585" y="566" text-anchor="middle">TestFlight, Play</text></g>
+<line class="arr" x1="141" y1="554" x2="146" y2="554" marker-end="url(#arrow)"/>
+<line class="arr" x1="239" y1="554" x2="244" y2="554" marker-end="url(#arrow)"/>
+<line class="arr" x1="337" y1="554" x2="342" y2="554" marker-end="url(#arrow)"/>
+<line class="arr" x1="435" y1="554" x2="440" y2="554" marker-end="url(#arrow)"/>
+<line class="arr" x1="533" y1="554" x2="538" y2="554" marker-end="url(#arrow)"/>
+<text class="ts" x="46" y="596">Teal marks where the work is now: Weather on iOS, step 5. Phases go in order; each ships before the next starts.</text>
+</svg>
