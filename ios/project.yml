@@ -42,3 +42,29 @@ targets:
         DEVELOPMENT_TEAM: KTS29DB5CZ
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  DaybookUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - UITests
+    dependencies:
+      - target: Daybook
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.replicantstudio.daybook.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Daybook
+schemes:
+  Daybook:
+    build:
+      targets:
+        Daybook: all
+        DaybookUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - DaybookUITests
+    archive:
+      config: Release

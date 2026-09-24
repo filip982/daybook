@@ -31,6 +31,10 @@ ios-build: project
 ios-verify-bundle: ios-build
 	scripts/verify-bundle.sh $(DERIVED)/Build/Products/Debug-iphonesimulator/Daybook.app
 
+.PHONY: ios-ui-test
+ios-ui-test: project
+	xcodebuild test -project ios/Daybook.xcodeproj -scheme Daybook -only-testing:DaybookUITests -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) -quiet CODE_SIGNING_ALLOWED=NO
+
 ARCHIVE := ios/build/Daybook.xcarchive
 VERSION ?= 0.0.0
 BUILD ?= 1

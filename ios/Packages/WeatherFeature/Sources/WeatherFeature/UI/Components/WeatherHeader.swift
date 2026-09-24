@@ -51,6 +51,7 @@ struct WeatherHeader: View {
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("weather.header")
     }
 
     private var staleLine: String? {

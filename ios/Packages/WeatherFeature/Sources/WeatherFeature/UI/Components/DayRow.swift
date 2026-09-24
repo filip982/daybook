@@ -26,6 +26,7 @@ struct DayRow: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(dayRowLabel(day, formatter: formatter, now: now))
+        .accessibilityIdentifier("weather.dayRow")
     }
 
     private var compact: some View {

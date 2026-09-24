@@ -24,6 +24,7 @@ struct LocationsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: onDone)
+                        .accessibilityIdentifier("locations.doneButton")
                 }
             }
             .searchable(text: $viewModel.searchQuery)
