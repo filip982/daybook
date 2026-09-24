@@ -42,6 +42,20 @@ struct WeatherViewSnapshotTests {
         )
     }
 
+    @Test func loadedSavedCity() {
+        assertSnapshot(
+            of: screen(.loaded(.fixtureLisbon, placeName: "Lisbon", isOffline: false), isCurrentLocation: false),
+            as: strategy()
+        )
+    }
+
+    @Test func loadedDark() {
+        assertSnapshot(
+            of: screen(.loaded(.fixtureVienna, placeName: "Vienna", isOffline: false)),
+            as: strategy(style: .dark)
+        )
+    }
+
     @Test func loading() {
         assertSnapshot(of: screen(.loading), as: strategy(precision: 0.99))
     }
@@ -65,6 +79,27 @@ struct WeatherViewSnapshotTests {
         )
 
         assertSnapshot(of: locations(viewModel), as: strategy())
+    }
+
+    @Test func locationsDark() async {
+        let viewModel = await locationsViewModel(
+            cached: [SavedLocation.fixtures[0].coordinate: .fixtureLisbon],
+            saved: SavedLocation.fixtures
+        )
+
+        assertSnapshot(of: locations(viewModel), as: strategy(style: .dark))
+    }
+
+    @Test func locationsAccessibility5() async {
+        let viewModel = await locationsViewModel(
+            cached: [SavedLocation.fixtures[0].coordinate: .fixtureLisbon],
+            saved: SavedLocation.fixtures
+        )
+
+        assertSnapshot(
+            of: locations(viewModel).dynamicTypeSize(.accessibility5),
+            as: strategy(height: 1600, contentSize: .accessibilityExtraExtraExtraLarge)
+        )
     }
 
     @Test func locationsEmpty() async {
@@ -112,8 +147,8 @@ struct WeatherViewSnapshotTests {
             .transaction { $0.animation = nil }
     }
 
-    private func screen(_ state: WeatherScreenState) -> some View {
-        WeatherView(state: state, now: Self.now, locale: Self.locale)
+    private func screen(_ state: WeatherScreenState, isCurrentLocation: Bool = true) -> some View {
+        WeatherView(state: state, now: Self.now, locale: Self.locale, isCurrentLocation: isCurrentLocation)
             .environment(\.theme, .standard)
             .environment(\.timeZone, TimeZone(identifier: "Europe/Vienna")!)
             .transaction { $0.animation = nil }
@@ -122,7 +157,8 @@ struct WeatherViewSnapshotTests {
     private func strategy<V: View>(
         height: CGFloat = 852,
         contentSize: UIContentSizeCategory = .large,
-        precision: Float = 1
+        precision: Float = 1,
+        style: UIUserInterfaceStyle = .light
     ) -> Snapshotting<V, UIImage> {
         .image(
             precision: precision,
@@ -130,7 +166,7 @@ struct WeatherViewSnapshotTests {
             layout: .fixed(width: 393, height: height),
             traits: UITraitCollection { mutable in
                 mutable.displayScale = 2
-                mutable.userInterfaceStyle = .light
+                mutable.userInterfaceStyle = style
                 mutable.preferredContentSizeCategory = contentSize
                 mutable.legibilityWeight = .regular
                 mutable.accessibilityContrast = .normal
