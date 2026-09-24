@@ -17,6 +17,16 @@ make_feature "$clean"
 printf 'struct WeatherView { let title = "OpenMeteoProviders are hidden" }\n' > "$clean/Demo/Sources/Demo/UI/WeatherView.swift"
 "$here/lint-layers.sh" "$clean" >/dev/null 2>&1 || { echo "FAIL: clean tree was rejected"; exit 1; }
 
+literal="$tmp/literal"
+make_feature "$literal"
+printf 'struct WeatherView { let title = "Uses OpenMeteoProvider data" }\n' > "$literal/Demo/Sources/Demo/UI/WeatherView.swift"
+"$here/lint-layers.sh" "$literal" >/dev/null 2>&1 || { echo "FAIL: a provider name inside a string literal was rejected"; exit 1; }
+
+mixed="$tmp/mixed"
+make_feature "$mixed"
+printf 'struct WeatherView { let title = "a"; let provider = OpenMeteoProvider() }\n' > "$mixed/Demo/Sources/Demo/UI/WeatherView.swift"
+if "$here/lint-layers.sh" "$mixed" >/dev/null 2>&1; then echo "FAIL: UI using a provider type after a string literal was accepted"; exit 1; fi
+
 dirty="$tmp/dirty"
 make_feature "$dirty"
 printf 'struct WeatherView { let provider = OpenMeteoProvider() }\n' > "$dirty/Demo/Sources/Demo/UI/WeatherView.swift"
