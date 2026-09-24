@@ -51,6 +51,21 @@ import Testing
         }
     }
 
+    @Test func secondaryTextIsReadableOnGroupedListBackgroundsInBothModes() {
+        let lightBackgrounds = [RGB.white, RGB(red: 0xF2 / 255, green: 0xF2 / 255, blue: 0xF7 / 255)]
+        let darkBackgrounds = [
+            RGB.black,
+            RGB(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255),
+            RGB(red: 0x2C / 255, green: 0x2C / 255, blue: 0x2E / 255),
+        ]
+        for background in lightBackgrounds {
+            #expect(contrastRatio(theme.secondaryTextLight, background) >= 4.5)
+        }
+        for background in darkBackgrounds {
+            #expect(contrastRatio(theme.secondaryTextDark, background) >= 4.5)
+        }
+    }
+
     @Test func theCardDarkensTheSkyRatherThanLighteningIt() {
         for sky in Theme.Sky.allCases {
             let stops = theme.gradientStops(sky)

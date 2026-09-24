@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct RGB: Sendable, Hashable {
     var red: Double
@@ -105,6 +106,19 @@ public struct Theme: Sendable {
     public var cardFill: Color { cardFillColor.color }
 
     public var cardStroke: Color { TranslucentRGB(base: .white, opacity: 0.2).color }
+
+    var secondaryTextLight: RGB { RGB(red: 0x63 / 255, green: 0x63 / 255, blue: 0x66 / 255) }
+
+    var secondaryTextDark: RGB { RGB(red: 0xAE / 255, green: 0xAE / 255, blue: 0xB2 / 255) }
+
+    public var secondaryText: Color {
+        let light = secondaryTextLight
+        let dark = secondaryTextDark
+        return Color(uiColor: UIColor { traits in
+            let rgb = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(red: rgb.red, green: rgb.green, blue: rgb.blue, alpha: 1)
+        })
+    }
 }
 
 struct GradientStops: Sendable, Hashable {

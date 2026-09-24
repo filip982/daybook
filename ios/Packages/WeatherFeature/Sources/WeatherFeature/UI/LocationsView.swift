@@ -1,6 +1,8 @@
+import DaybookPlatform
 import SwiftUI
 
 struct LocationsView: View {
+    @Environment(\.theme) private var theme
     @Bindable private var viewModel: WeatherViewModel
     private let onDone: () -> Void
 
@@ -46,7 +48,7 @@ struct LocationsView: View {
                 ContentUnavailableView(
                     "No Saved Cities",
                     systemImage: "building.2",
-                    description: Text("Search for a city to add it.")
+                    description: Text("Search for a city to add it.").foregroundStyle(theme.secondaryText)
                 )
                 .listRowBackground(Color.clear)
             } else {
@@ -76,7 +78,7 @@ struct LocationsView: View {
                 if let name = viewModel.currentPlaceName {
                     Text(name)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(theme.secondaryText)
                 }
             }
         }
@@ -99,7 +101,7 @@ struct LocationsView: View {
                 if let summary = summary(for: city) {
                     Text(summary)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(theme.secondaryText)
                 }
             }
         }
@@ -138,7 +140,7 @@ struct LocationsView: View {
                         if let detail = detail(of: place) {
                             Text(detail)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(theme.secondaryText)
                         }
                     }
                 }
