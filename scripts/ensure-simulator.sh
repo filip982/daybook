@@ -10,12 +10,22 @@ os="$(sed -n 's/.*OS=\([^,]*\).*/\1/p' <<<"$destination")"
 
 runtime="com.apple.CoreSimulator.SimRuntime.iOS-${os//./-}"
 
-xcrun simctl list runtimes
 xcrun simctl list runtimes | grep -F "iOS $os " || fail "runtime iOS $os is not installed"
 
-if ! xcrun simctl list devices available "$runtime" | grep -F "$name (" >/dev/null; then
+udid="$(xcrun simctl list devices available -j | ruby -rjson -e '
+  device = JSON.parse(STDIN.read).dig("devices", ARGV[0]).to_a.find { |d| d["name"] == ARGV[1] }
+  puts device["udid"] if device
+' "$runtime" "$name")"
+
+if [ -z "$udid" ]; then
   echo "ensure-simulator: creating '$name' on $runtime"
-  xcrun simctl create "$name" "$name" "$runtime"
+  udid="$(xcrun simctl create "$name" "$name" "$runtime")"
 fi
 
-xcrun simctl list devices available "$runtime"
+xcrun simctl bootstatus "$udid" -b >/dev/null
+xcrun simctl list devices "$runtime"
+
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "DESTINATION=id=$udid" >> "$GITHUB_ENV"
+fi
+echo "ensure-simulator: $udid ready"
