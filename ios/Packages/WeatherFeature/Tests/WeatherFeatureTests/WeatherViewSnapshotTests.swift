@@ -27,6 +27,13 @@ struct WeatherViewSnapshotTests {
         )
     }
 
+    @Test func loadedOfflineRecent() {
+        assertSnapshot(
+            of: screen(.loaded(.fixtureVienna, placeName: "Vienna", isOffline: true)),
+            as: strategy()
+        )
+    }
+
     @Test func loadedAccessibility5() {
         assertSnapshot(
             of: screen(.loaded(.fixtureVienna, placeName: "Vienna", isOffline: false))

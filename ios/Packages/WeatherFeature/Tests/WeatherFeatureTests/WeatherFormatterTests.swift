@@ -292,4 +292,21 @@ import Testing
         #expect(rendered.contains("2"))
         #expect(rendered.lowercased().contains("hr") || rendered.lowercased().contains("hour"))
     }
+
+    @Test func updatedAgoFollowsTheFormatterLocale() {
+        let now = Self.date(2026, 9, 21, 12, in: Self.vienna)
+        let formatter = WeatherFormatter(locale: Locale(identifier: "de_AT"), timeZone: Self.vienna)
+        let rendered = formatter.updatedAgo(now.addingTimeInterval(-2 * 3600), now: now)
+
+        #expect(rendered.contains("2"))
+        #expect(rendered.contains("Std"))
+    }
+
+    @Test func updatedAgoCountsMinutes() {
+        let now = Self.date(2026, 9, 21, 12, in: Self.vienna)
+        let rendered = Self.metricFormatter.updatedAgo(now.addingTimeInterval(-45 * 60), now: now)
+
+        #expect(rendered.hasPrefix("Updated "))
+        #expect(rendered.contains("45"))
+    }
 }
